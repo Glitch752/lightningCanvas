@@ -1,0 +1,4 @@
+{
+    "_comment": "Fix svelte language server import indentation...",
+    "tabWidth": 4
+}

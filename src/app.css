@@ -1,0 +1,133 @@
+:root {
+	--bg: #1b1723;
+	--bg-elevated: #241f2e;
+	--surface: #2c2638;
+	--surface-hover: #2f293d;
+	--border: #3d3550;
+
+	--text-hover: #c9b6ec;
+	--text: #b7adcb;
+	--text-muted: #938aa7;
+
+	--primary: #b9a3e3;
+	--primary-hover: #c9b6ec;
+	--accent: #d8b4e2;
+	--border-focus: color-mix(in srgb, var(--primary) 50%, var(--border) 50%);
+
+	--success: #a8d8c0;
+	--warning: #e8d3a3;
+	--danger: #e3a3b0;
+
+	--radius: 5px;
+	--shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+	--font-xs: 0.65rem;
+	--font-sm: 0.875rem;
+	--font-md: 0.9rem;
+	--font-lg: 1.125rem;
+	--font-xl: 1.25rem;
+}
+
+*, *::before, *::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	height: 100%;
+	font-family: "JetBrains Mono", monospace, system-ui, sans-serif;
+	font-size: var(--font-md);
+	overflow: hidden;
+}
+
+body {
+	background: var(--bg);
+	color: var(--text);
+}
+
+h1, h2, h3, h4, h5, h6 {
+	margin: 0;
+}
+h1 { font-size: var(--font-xl); }
+h2 { font-size: var(--font-lg); }
+h3 { font-size: var(--font-md); }
+p {
+	margin: 0;
+}
+
+/* input styles */
+input, textarea, select, button, .-input {
+	font-family: inherit;
+	font-size: inherit;
+	color: inherit;
+
+	background-color: var(--surface);
+	border-radius: var(--radius);
+	border: 1px solid var(--border);
+	outline: none;
+	
+	padding: 0.5em 0.75em;
+	transition: border-color 200ms ease, background-color 200ms ease, color 200ms ease;
+
+	&:hover, &:focus-visible {
+		border-color: var(--border-focus);
+		background-color: var(--surface-hover);
+		color: var(--text-hover);
+	}
+
+	&.-selected {
+		border-color: var(--primary);
+		background-color: var(--surface-hover);
+		color: var(--text-hover);
+	}
+	&.-flat {
+		border: none;
+		border-radius: 0;
+	}
+}
+
+/* material-style input label inset in the border */
+.-label-inset {
+	position: relative;
+
+	input {
+		width: 100%;
+	}
+	label {
+		position: absolute;
+		top: 0;
+		left: 0.5rem;
+		transform: translateY(-50%);
+		background-color: var(--surface);
+		padding: 0 0.25em;
+		border-radius: var(--radius);
+		font-size: var(--font-xs);
+	}
+}
+
+.lucide-icon {
+	width: 1em;
+	height: 1em;
+}
+
+/* pretty arbitrary convention, but i like it. utility styles starting with - */
+
+.-card {
+	background: var(--bg-elevated);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+}
+.-vflex {
+	display: flex;
+	flex-direction: column;
+}
+.-hflex {
+	display: flex;
+	flex-direction: row;
+}
+.-cgrid {
+	display: grid;
+	place-items: center;
+}

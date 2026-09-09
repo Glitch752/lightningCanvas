@@ -1,5 +1,5 @@
-import { redirect, type Handle } from '@sveltejs/kit';
-import { cookieName, createSessionCookie, isAuthenticated } from '$lib/server/auth';
+import { redirect, type Handle } from "@sveltejs/kit";
+import { cookieName, createSessionCookie, isAuthenticated } from "$lib/server/auth";
 
 // handle simple auth
 export const handle: Handle = ({ event, resolve }) => {

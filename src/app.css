@@ -87,6 +87,14 @@ input, textarea, select, button, .-input {
 	}
 }
 
+a {
+	color: var(--primary);
+	transition: color 200ms ease;
+	&:hover {
+		color: var(--primary-hover);
+	}
+}
+
 /* material-style input label inset in the border */
 .-label-inset {
 	position: relative;

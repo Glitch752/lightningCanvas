@@ -1,5 +1,5 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
-import { env } from '$env/dynamic/private';
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { env } from "$env/dynamic/private";
 
 const cookieName = 'auth';
 const sessionLifetimeSeconds = 60 * 60 * 24 * 7;

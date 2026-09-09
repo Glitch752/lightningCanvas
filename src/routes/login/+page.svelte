@@ -1,6 +1,6 @@
 <script lang="ts">
-  	import { pageData } from '../+layout.svelte';
-	import type { ActionData } from './$types';
+  	import { pageData } from "../+layout.svelte";
+	import type { ActionData } from "./$types";
 
 	let { form }: { form: ActionData } = $props();
 

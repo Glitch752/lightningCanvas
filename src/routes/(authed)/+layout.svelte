@@ -2,8 +2,10 @@
     import { pageDataStore } from "../+layout.svelte";
     import { page } from "$app/state";
     import { Calendar, Gauge, LogOut, Settings } from "@lucide/svelte";
+	import type { LayoutData } from "./$types";
+    import type { Snippet } from "svelte";
   	
-	let { children } = $props();
+	let { children, data }: { children: Snippet, data: LayoutData } = $props();
 </script>
 
 <div class="app">
@@ -85,6 +87,7 @@ footer {
 		flex: 1;
 	}
 	a, button {
+		white-space: nowrap;
 		height: 100%;
 		aspect-ratio: 1;
 		padding: 0.25rem;

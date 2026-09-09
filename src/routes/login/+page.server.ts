@@ -1,6 +1,6 @@
-import { fail, redirect } from '@sveltejs/kit';
-import type { Actions, PageServerLoad } from './$types';
-import { createSessionCookie, passwordIsValid } from '$lib/server/auth';
+import { fail, redirect } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
+import { createSessionCookie, passwordIsValid } from "$lib/server/auth";
 
 /** safely redirect to a given path, ensuring it's relative */
 const safeRedirect = (value: string | null) =>

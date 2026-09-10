@@ -2,8 +2,9 @@ import { readFile, writeFile } from "node:fs/promises";
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { defaultSettings, isSettings, type Settings } from "$lib/settings";
+import { dataDirectory } from "./data";
 
-const settingsPath = join(process.cwd(), "data", "settings.json");
+const settingsPath = join(dataDirectory, "settings.json");
 
 /** get the current settings */
 export async function getSettings(): Promise<Settings> {

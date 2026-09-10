@@ -4,7 +4,7 @@ A work-in-progress single-user-focused [Canvas LMS](https://canvas.instructure.c
 
 On slow computers and networks, I've always been fed up with how long Canvas takes to load. This project makes the frontend as fast as possible by caching client-side, proactively polling slow API endpoints, using fast SvelteKit SSR with preload and whatever else, and removing all the unnecessary bloat.
 
-Secondary goals are customizability, better views for things like tasks and grades, and acting as a webhook client to push calendar/task data to other apps.
+Secondary goals are customizability, better use of space than the official Canvas frontend, better views for things like tasks and grades, and acting as a webhook client to push calendar/task data to other apps.
 
 Doesn't replicate the entire (or even a large fraction of) Canvas functionality, but provides a faster route for common things like opening assignments, checking grades, and viewing tasks. Things like submission, discussions, users, and other things still just redirect to the official Canvas frontend.
 

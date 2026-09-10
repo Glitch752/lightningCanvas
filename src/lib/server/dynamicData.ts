@@ -1,0 +1,212 @@
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { dataDirectory } from "./data";
+
+/** the stored data in a cache file for a dynamic data source */
+type StoredValue<T> = {
+	value: T;
+	fetchedAt: number;
+	expiresAt: number;
+};
+
+/** the type sent to the client when loading dynamic data in a sveltekit ssr load function */
+export type SKLoadDynamicData<T> = { cached: StoredValue<T> | undefined; updated: Promise<RefreshResult<T>> };
+
+/** options for creating a new dynamic data source */
+export type DynamicDataOptions<T> = {
+	/** a stable name used as the filename */
+	key: string;
+	fetch: () => Promise<T>;
+	/** how long a successfully fetched value is usable, in milliseconds */
+	ttlMs: number;
+	/** refresh in the background on this interval, if present */
+	refreshIntervalMs?: number;
+	/** runs after a new value has been written; errors are logged and ignored */
+	onUpdated?: (value: T, previous: T | undefined) => Promise<void> | void;
+	/** optional comparison function for sending updated data to clients */
+	equals?: (a: T, b: T) => boolean;
+};
+
+/** the result of a refresh operation */
+export type RefreshResult<T> = { kind: "updated"; value: T } | { kind: "unchanged" };
+
+/** sanitize a key for use in a filename */
+function safeKey(key: string): string {
+	const value = key.replace(/[^a-zA-Z0-9._-]/g, "_");
+	if(!value) throw new Error("dynamic data keys can't be empty");
+	return value;
+}
+
+/** check if a value is a valid StoredValue */
+function isStoredValue(value: unknown): value is StoredValue<unknown> {
+	if(typeof value !== "object" || value === null) return false;
+	const record = value as Record<string, unknown>;
+	return "value" in record && typeof record.fetchedAt === "number" && typeof record.expiresAt === "number";
+}
+
+/**
+ * a small store for server-side data that caches, stores, and asynchrnously refreshes data  
+ * safe to use from SvelteKit load functions (obviously).  
+ *   
+ * the intended use is to send a cached value from `.get()`, then stream a refreshed value from `.refresh()` to the client.  
+ * `.load()` is a wrapper that works with `dynamicDataState` on the client to make this pattern easier.
+ * ```ts
+ * export const load: PageServerLoad = async () => {
+ *     return {
+ *         // sends cached data immediately then streams updated data after the initial response
+ *         value: dynamicData.load()
+ *     };
+ * };
+ * ```
+ */
+export class DynamicData<T> {
+    /** the full path to the cache file */
+	private readonly path: string;
+    /** in-memory cache */
+	private memory: StoredValue<T> | null | undefined;
+    /** to disallow multiple simultaneous refreshes */
+	private refreshPromise: Promise<RefreshResult<T>> | undefined;
+    /** for refreshing */
+	private timer: ReturnType<typeof setInterval> | undefined;
+
+	constructor(private readonly options: DynamicDataOptions<T>) {
+		if(!Number.isFinite(options.ttlMs) || options.ttlMs <= 0) {
+			throw new Error(`Invalid ttlMs for dynamic data '${options.key}'`);
+		}
+		this.path = join(dataDirectory, "cache", `${safeKey(options.key)}.json`);
+
+        // set up an interval to refresh the data in the background if necessary
+		if(options.refreshIntervalMs !== undefined) {
+			if(!Number.isFinite(options.refreshIntervalMs) || options.refreshIntervalMs <= 0) {
+				throw new Error(`Invalid refreshIntervalMs for dynamic data '${options.key}'`);
+			}
+			this.timer = setInterval(() => {
+				void this.refresh().catch((error) => console.error(`Failed to refresh ${options.key}`, error));
+			}, options.refreshIntervalMs);
+			this.timer.unref?.();
+		}
+	}
+
+	/** return the current non-expired value without fetching new data */
+	async get(): Promise<StoredValue<T> | undefined> {
+		const stored = await this.read();
+		if(!stored) return undefined;
+		if(stored.expiresAt <= Date.now()) {
+			this.memory = null;
+			await rm(this.path, { force: true });
+			return undefined;
+		}
+		return stored;
+	}
+
+	/** fetch and return a new value. concurrent calls are safe. */
+	async refresh(): Promise<RefreshResult<T>> {
+        // if already refreshing, use the same promise
+		if(this.refreshPromise) return this.refreshPromise;
+
+		this.refreshPromise = (async () => {
+			const previous = await this.get();
+
+			const value = await this.options.fetch();
+			const stored: StoredValue<T> = {
+				value,
+				fetchedAt: Date.now(),
+				expiresAt: Date.now() + this.options.ttlMs
+			};
+
+			await this.write(stored);
+            
+            const jsonCompare = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+			const changed = previous === undefined || !(this.options.equals ?? jsonCompare)(previous.value, value);
+
+			if(changed && this.options.onUpdated) {
+				try {
+					await this.options.onUpdated(value, previous?.value);
+				} catch(error) {
+					console.error(`onUpdated failed for ${this.options.key}`, error);
+				}
+			}
+
+			return changed ? { kind: "updated" as const, value } : { kind: "unchanged" as const };
+		})().finally(() => { // crazy syntax but ok
+			this.refreshPromise = undefined;
+		});
+
+		return this.refreshPromise;
+	}
+
+	/**
+     * get cached data immediately and refresh it in the background.  
+     * this is just slightly nicer wrapper for running `get()` and `refresh()` and sending the changes
+     * to the client.
+     */
+	async load(
+        transform: (v: T) => T = (cached) => cached
+    ): Promise<SKLoadDynamicData<T>> {
+        const rawCached = await this.get();
+        const cached = rawCached ? { ...rawCached, value: transform(rawCached.value) } : undefined;
+        const refreshPromise = this.refresh();
+
+        // if not cached yet, wait for the refresh before returning any data
+        if(!cached) {
+            const result = await refreshPromise;
+            if(result.kind !== "updated") {
+                // this should never happen: if there was no cached value, refreshing _should_ produce a new one.
+                // i guess there are some edge cases like the fetch returning undefined or failing, but we probably
+                // don't care about the value in those cases, so... just fail
+                throw new Error(`Dynamic data '${this.options.key}' refresh didn't produce a new value`);
+            }
+            return {
+                cached: {
+                    value: transform(result.value),
+                    fetchedAt: Date.now(),
+                    expiresAt: Date.now() + this.options.ttlMs
+                },
+                updated: Promise.resolve({ kind: "unchanged" as const })
+            };
+        }
+
+        return {
+            cached,
+            // sveltekit streams this promise after the initial response
+            updated: refreshPromise.then((result) => result.kind === "updated" ?
+                { kind: "updated" as const, value: transform(result.value) } : result)
+        };
+	}
+
+    /** clean up if being destroyed. necessary for data sources with a refresh interval. */
+	destroy(): void {
+		if(this.timer) clearInterval(this.timer);
+	}
+
+    /** read the cached data from disk or memory */
+	private async read(): Promise<StoredValue<T> | undefined> {
+		if(this.memory !== undefined) return this.memory || undefined;
+
+		try {
+			const parsed: unknown = JSON.parse(await readFile(this.path, "utf8"));
+			if(!isStoredValue(parsed)) { // sanity check
+				this.memory = null;
+				return undefined;
+			}
+			this.memory = parsed as StoredValue<T>;
+			return this.memory;
+		} catch(error) {
+			if((error as NodeJS.ErrnoException).code === "ENOENT") {
+				this.memory = null;
+				return undefined;
+			}
+			throw error;
+		}
+	}
+
+    /** write the cached data to disk */
+	private async write(value: StoredValue<T>): Promise<void> {
+		await mkdir(dirname(this.path), { recursive: true });
+        // atomically write, probably not necessary but just in case
+		const temporaryPath = `${this.path}.${process.pid}.tmp`;
+		await writeFile(temporaryPath, `${JSON.stringify(value)}\n`, "utf8");
+		await rename(temporaryPath, this.path);
+		this.memory = value;
+	}
+}

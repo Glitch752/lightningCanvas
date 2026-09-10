@@ -1,9 +1,10 @@
 <script lang="ts">
     import { pageDataStore } from "../+layout.svelte";
     import { page } from "$app/state";
-    import { Calendar, Gauge, LogOut, Settings } from "@lucide/svelte";
+    import { Calendar, Gauge, LoaderCircle, LogOut, Settings } from "@lucide/svelte";
 	import type { LayoutData } from "./$types";
     import type { Snippet } from "svelte";
+    import { dynamicDataLoading } from "$lib/dynamicData.svelte";
   	
 	let { children, data }: { children: Snippet, data: LayoutData } = $props();
 </script>
@@ -22,7 +23,12 @@
 		{:else}
 			<p title="This page isn't set up to map to an equivalent Canvas page">No Canvas page</p>
 		{/if}
+
 		<div class="spacer"></div>
+
+		{#if $dynamicDataLoading}
+			<div class="icon -spin" title="loading..."><LoaderCircle /></div>
+		{/if}
 		<a class="-input -flat" href="/settings" title="Settings" class:-selected={page.route.id === "/(authed)/settings"}><Settings /></a>
 		<form method="POST" action="/logout">
 			<button class="-flat" title="Log out"><LogOut /></button>
@@ -86,7 +92,7 @@ footer {
 	.spacer {
 		flex: 1;
 	}
-	a, button {
+	a, button, .icon {
 		white-space: nowrap;
 		height: 100%;
 		aspect-ratio: 1;

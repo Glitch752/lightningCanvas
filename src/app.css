@@ -7,7 +7,7 @@
 
 	--text-hover: #c9b6ec;
 	--text: #b7adcb;
-	--text-muted: #938aa7;
+	--text-muted: #877e9a;
 
 	--primary: #b9a3e3;
 	--primary-hover: #c9b6ec;
@@ -20,9 +20,18 @@
 
 	--radius: 5px;
 	--shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	--shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.25);
+
+	/* assorted misc pastel colors for things like color-coded course/calendar highlights */
+	--misc-1: #f5c2e7;
+	--misc-2: #f5dcc2;
+	--misc-3: #e8f5c2;
+	--misc-4: #c9f5c2;
+	--misc-5: #c2f5e7;
+	--misc-6: #c8c2f5;
 
 	--font-xs: 0.65rem;
-	--font-sm: 0.875rem;
+	--font-sm: 0.75rem;
 	--font-md: 0.9rem;
 	--font-lg: 1.125rem;
 	--font-xl: 1.25rem;
@@ -127,6 +136,13 @@ a {
 	border-radius: var(--radius);
 	box-shadow: var(--shadow);
 }
+.-hover-hl {
+	transition: transform 200ms ease, box-shadow 200ms ease;
+	&:hover {
+		transform: translateY(-1px);
+		box-shadow: var(--shadow-hover);
+	}
+}
 .-vflex {
 	display: flex;
 	flex-direction: column;
@@ -138,4 +154,12 @@ a {
 .-cgrid {
 	display: grid;
 	place-items: center;
+}
+
+.-spin {
+	animation: spin 1s linear infinite;
+}
+@keyframes spin {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
 }

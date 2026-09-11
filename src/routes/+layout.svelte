@@ -5,7 +5,7 @@
 		canvasUrl: string | null;
 	};
 	export const pageDataStore: Writable<PageData> = writable({
-		title: "LightningCanvas",
+		title: "Loading...",
 		canvasUrl: null
 	});
 
@@ -25,7 +25,7 @@
 
 <svelte:head>
 	<link rel="icon" href="/favicon.png" />
-	<title>{$pageDataStore.title}</title>
+	<title>{$pageDataStore.title} 🗲 Canvas</title>
 </svelte:head>
 
 {@render children()}

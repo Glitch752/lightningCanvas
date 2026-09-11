@@ -163,3 +163,7 @@ a {
 	from { transform: rotate(0deg); }
 	to { transform: rotate(360deg); }
 }
+
+.-error   { color: var(--danger); }
+.-warning { color: var(--warning); }
+.-success { color: var(--success); }

@@ -20,11 +20,20 @@ function startLoad() {
 	};
 }
 
+export type DynamicDataState<T> = {
+	/** the current value, either cached or updated */
+	value: T | undefined;
+	/** true if the data is currently being refreshed */
+	loading: boolean;
+	/** any error that occurred during the refresh */
+	error: unknown;
+};
+
 /**
  * a reactive wrapper for sveltekit-loaded dynamic data that shows an initial value then changes to
  * the updated value when the background refresh completes.
  */
-export function dynamicDataState<T>(v: () => SKLoadDynamicData<T>) {
+export function dynamicDataState<T>(v: () => SKLoadDynamicData<T>): DynamicDataState<T> {
     const data = v();
 	let value = $state(data.cached?.value);
 	let loading = $state(true);

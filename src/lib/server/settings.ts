@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { defaultSettings, isSettings, type Settings } from "$lib/settings";
+import { defaultSettings, isSettings, normalizeSettings, type Settings } from "$lib/settings";
 import { dataDirectory } from "./data";
 
 const settingsPath = join(dataDirectory, "settings.json");
@@ -11,7 +11,7 @@ export async function getSettings(): Promise<Settings> {
 	try {
 		const contents = await readFile(settingsPath, "utf8");
 		const parsed: unknown = JSON.parse(contents);
-		return isSettings(parsed) ? parsed : { ...defaultSettings };
+		return isSettings(parsed) ? normalizeSettings(parsed) : { ...defaultSettings };
 	} catch(error) {
 		if((error as NodeJS.ErrnoException).code === "ENOENT") return { ...defaultSettings };
 		throw error;

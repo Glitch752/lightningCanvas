@@ -3,6 +3,7 @@
     import { pageData } from "../+layout.svelte";
     import { dynamicDataState } from "$lib/dynamicData.svelte";
     import { goto } from "$app/navigation";
+    import TodoList from "./TodoList.svelte";
 
 	let { data }: { data: PageData } = $props();
 
@@ -20,32 +21,50 @@
     ].map(u => `https://images.unsplash.com/photo-${u}?q=80&w=512&h=512&auto=format&fit=crop`)
 
     const courses = dynamicDataState(() => data.courses);
+    const plannerItems = dynamicDataState(() => data.plannerItems);
+
+    const courseItems = $derived(courses.value
+        ?.toSorted((a, b) => a.dashboardPosition - b.dashboardPosition)
+        ?.map((c, i) => ({ ...c, color: `var(--misc-${(i % 6) + 1})`}))
+    );
 </script>
 
 <div class="page">
     <div class="courses -vflex">
-        <h1>Courses <span class="count">({courses.value?.length ?? 0})</span></h1>
-        {#if courses.value?.length === 0}
+        <h1>Courses <span class="count">({courseItems?.length ?? 0})</span></h1>
+        {#if courseItems?.length === 0}
             <p>No courses found.</p>
         {:else}
             <div class="course-list">
-                {#each courses.value as course, i}
+                {#each courseItems as course, i}
                     <!-- svelte-ignore a11y_click_events_have_key_events,a11y_no_static_element_interactions -
                         we have ""better"" links for accessibility below, this is just for a full card clickable
                         area without nesting interactive elements -->
                     <div
                         class="course -card -hover-hl"
-                        style="--highlight: var(--misc-{(i % 6) + 1})"
+                        style="--highlight: {course.color}"
                         onclick={e => {
                             if((e.target as HTMLElement)?.closest("a, button")) return;
                             goto(`/course/${course.id}`)
                         }}
                     >
-                        <img src={course.imageUrl ?? courseImages[i % courseImages.length]} alt="" loading="lazy" />
-                        <a href={`/course/${course.id}`} class="course-info -vflex">
+                        <img src={
+                            (data.settings.visual.useCourseImages ? course.imageUrl : null) ??
+                            courseImages[i % courseImages.length]
+                        } alt="" loading="lazy" />
+                        <a href={`/course/${course.id}/grades`} class="course-grade -vflex">
+                            <span class="grade -card">{course.grade.currentGrade ?? "n/a"}</span>
+                            {#if course.grade.currentScore}
+                                <span class="score -card">{course.grade.currentScore}%</span>
+                            {/if}
+                        </a>
+                        <a href={`/course/${course.id}`} class="course-info">
                             <span class="course-name" title={course.fullName}>{course.displayedName}</span>
                             {#if course.courseCode}
-                                <span class="course-code">{course.courseCode}</span>
+                                <span class="course-code" title={course.courseCode}>{course.courseCode}</span>
+                            {/if}
+                            {#if course.termName}
+                                <span class="course-term">{course.termName}</span>
                             {/if}
                         </a>
                     </div>
@@ -58,9 +77,7 @@
     </div>
     
     <div class="todo -vflex">
-        <h1>Todo</h1>
-        <!-- :3 -->
-        todo: todo
+        <TodoList {plannerItems} {courseItems} />
     </div>
 </div>
 
@@ -68,7 +85,6 @@
 .page {
     display: grid;
     grid-template-columns: 1fr 20rem;
-    gap: 1rem;
 }
 .courses, .todo {
     padding: 0.5rem 1rem 1rem 1rem;
@@ -80,9 +96,10 @@
     }
 }
 .courses {
+    padding-right: 0.5rem;
     .course-list {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
         gap: 1rem 0.75rem;
     }
     .course {
@@ -107,17 +124,57 @@
         margin: 0.5rem 1rem 1rem 1rem;
         text-decoration: underline transparent;
         transition: text-decoration-color 200ms ease-out;
+        
+        display: grid;
+        grid-template-rows: auto auto;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "name name"
+            "code term";
+        gap: 0 0.75rem;
+        
         &:hover {
             text-decoration: underline var(--text);
         }
-        gap: 0.25rem;
 
         .course-name {
+            grid-area: name;
             color: var(--highlight);
+            margin-bottom: 0.25rem;
         }
         .course-code {
+            grid-area: code;
             color: var(--text-muted);
             font-size: var(--font-xs);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .course-term {
+            grid-area: term;
+            color: var(--text-muted);
+            font-size: var(--font-xs);
+        }
+    }
+
+    .course-grade {
+        position: absolute;
+        top: 0.5rem;
+        left: 0.5rem;
+        gap: 0.25rem;
+        align-items: start;
+        text-decoration: none;
+
+        .grade {
+            font-size: var(--font-xl);
+            font-weight: bold;
+            padding: 0.25rem 0.75rem;
+            color: var(--highlight);
+        }
+        .score {
+            font-size: var(--font-sm);
+            color: var(--text-muted);
+            padding: 0.125rem 0.25rem;
         }
     }
 }

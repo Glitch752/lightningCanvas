@@ -1,6 +1,7 @@
 import { fail } from "@sveltejs/kit";
 import type { Actions } from "./$types";
-import { saveSettings } from "$lib/server/settings";
+import { updateVisualSettings } from "$lib/settings";
+import { getSettings, saveSettings } from "$lib/server/settings";
 
 export const actions: Actions = {
 	default: async ({ request }) => {
@@ -16,9 +17,11 @@ export const actions: Actions = {
 			const hostname = new URL(canvasHostname);
 			if(hostname.protocol !== 'https:') throw new Error("Canvas hostname must start with 'https://'");
 
+			const currentSettings = await getSettings();
 			await saveSettings({
 				canvasHostname: canvasHostname.replace(/\/$/, ""),
-				canvasApiKey
+				canvasApiKey,
+				visual: updateVisualSettings(formData, currentSettings)
 			});
 			return { saved: true };
 		} catch(error) {

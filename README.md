@@ -1,5 +1,7 @@
-# lightning-canvas
-
+# LightningCanvas
+_because lightning means quick, right?_  
+  
+  
 A work-in-progress single-user-focused [Canvas LMS](https://canvas.instructure.com/) frontend using API tokens optimized for one thing: speed.
 
 On slow computers and networks, I've always been fed up with how long Canvas takes to load. This project makes the frontend as fast as possible by caching client-side, proactively polling slow API endpoints, using fast SvelteKit SSR with preload and whatever else, and removing all the unnecessary bloat.

@@ -27,6 +27,11 @@ export type DynamicDataOptions<T> = {
 	onUpdated?: (value: T, previous: T | undefined) => Promise<void> | void;
 	/** optional comparison function for sending updated data to clients. falls back to json stringification if not provided */
 	equals?: (a: T, b: T) => boolean;
+	/**
+	 * whether we require data to be fetched on the first load before returning or if we should return a "cached" null.
+	 * defaults to false.
+	 */
+	requireInitialFetch?: boolean;
 };
 
 /** the result of a refresh operation */
@@ -104,7 +109,7 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
 		this.refreshPromise = (async () => {
 			const previous = await this.get();
 
-			if(previous && previous.expiresAt > Date.now() - this.options.refreshThresholdMs) {
+			if(previous && previous.fetchedAt > Date.now() - this.options.refreshThresholdMs) {
 				return { kind: "unchanged" as const };
 			}
 
@@ -147,10 +152,19 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
         const rawCached = await this.get();
         const cached = rawCached ? { ...rawCached, value: transform(rawCached.value) } : undefined;
         const refreshPromise = this.refresh();
+		const refreshTransform = refreshPromise.then((result) => result.kind === "updated" ?
+			{ kind: "updated" as const, value: transform(result.value) } : result);
 
         // if not cached yet, wait for the refresh before returning any data
         if(!cached) {
-            const result = await refreshPromise;
+			if(!this.options.requireInitialFetch) {
+				return {
+					cached: undefined,
+					updated: refreshTransform
+				};
+			}
+
+            const result = await refreshTransform;
             if(result.kind !== "updated") {
                 // this should never happen: if there was no cached value, refreshing _should_ produce a new one.
                 // i guess there are some edge cases like the fetch returning undefined or failing, but we probably
@@ -159,7 +173,7 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
             }
             return {
                 cached: {
-                    value: transform(result.value),
+                    value: result.value,
                     fetchedAt: Date.now(),
                     expiresAt: Date.now() + this.options.ttlMs
                 },
@@ -170,8 +184,7 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
         return {
             cached,
             // sveltekit streams this promise after the initial response
-            updated: refreshPromise.then((result) => result.kind === "updated" ?
-                { kind: "updated" as const, value: transform(result.value) } : result)
+            updated: refreshTransform
         };
 	}
 

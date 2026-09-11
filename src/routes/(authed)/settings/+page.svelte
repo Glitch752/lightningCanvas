@@ -3,6 +3,7 @@
 	import type { ActionData } from "./$types";
 	import type { PageData } from "./$types";
     import { pageData } from "../../+layout.svelte";
+    import { visualSettings, type VisualSettings } from "$lib/settings";
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
     // svelte-ignore state_referenced_locally
@@ -50,6 +51,23 @@
             {/if}
 		</div>
 
+        <br />
+        
+        <h2>Visual</h2>
+        {#each Object.entries(visualSettings) as [key, { label, default: defaultValue }]}
+            <div class="flag-setting -hflex">
+                <label for={"visual." + key}>{label}</label>
+                <input
+                    id={"visual." + key}
+                    name={"visual." + key}
+                    type="checkbox"
+                    checked={data.settings.visual[key as keyof VisualSettings] ?? defaultValue}
+                />
+            </div>
+        {/each}
+
+        <br />
+        
 		<button type="submit">Save</button>
 		{#if form?.saved}<p>Settings saved.</p>{/if}
 		{#if form?.error}<p>{form.error}</p>{/if}
@@ -76,6 +94,11 @@ form {
             padding: 0.5rem;
             aspect-ratio: 1;
         }
+    }
+
+    .flag-setting {
+        gap: 2rem;
+        margin: -0.25rem 0;
     }
 }
 </style>

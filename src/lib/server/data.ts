@@ -82,8 +82,6 @@ export class ImmutableFetchedData<T, Key> extends StoredData<{ value: T, key: Ke
             const record = value as Record<string, unknown>;
             return "value" in record && "key" in record;
         });
-
-        this.update();
     }
 
     /** re-fetch if the key has changed, returning the value at the end. */

@@ -1,4 +1,4 @@
-query MyQuery($userId: ID!) {
+query CourseData($userId: ID!) {
   legacyNode(_id: $userId, type: User) {
     ... on User {
       ...ActiveCourses

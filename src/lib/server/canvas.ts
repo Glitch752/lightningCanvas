@@ -4,7 +4,7 @@ import { ImmutableFetchedData } from "./data";
 import coursesQuery from "./queries/courses.gql?raw";
 
 export type CanvasCourse = {
-	id: number;
+	id: string;
 
 	displayedName: string;
 	courseCode: string;
@@ -25,7 +25,7 @@ type CoursesQueryResponse = {
 		legacyNode: {
 			enrollments: {
 				course: {
-					_id: number;
+					_id: string;
 					courseCode: string;
 					courseNickname?: string;
 					name: string;
@@ -44,7 +44,27 @@ type CoursesQueryResponse = {
 			}[]
 		}
 	}
-}
+};
+
+export type PlannerItem = {
+	context_type: "Course" | string;
+	context_name: string;
+	course_id: number;
+
+	submissions: {
+		submitted: boolean;
+	};
+
+	plannable_id: string;
+	plannable_type: "assignment" | string;
+	plannable_date: string;
+	plannable: {
+		id: string;
+		title: string;
+		points_possible: number;
+		due_at: string;
+	};
+};
 
 function stripGQLWhitespace(query: string): string {
 	return query.replace(/\s+/g, " ").trim();
@@ -56,9 +76,11 @@ async function canvasFetch<T>(path: string, headers: Record<string, string> = {}
     if(!settings.canvasHostname || !settings.canvasApiKey) return null;
 
 	console.log("fetching Canvas data", path);
+	let time = Date.now();
     const response = await fetch(`${settings.canvasHostname}${path}`, {
         headers: { Authorization: `Bearer ${settings.canvasApiKey}`, ...headers }
     });
+	console.log(`Canvas fetch ${path} took ${Date.now() - time}ms`);
 
     if(!response.ok) throw new Error(`Canvas request failed (${response.status})`);
     return await response.json() as T;
@@ -93,7 +115,7 @@ export const userId = new ImmutableFetchedData<number | null, string>({
 export const courseData = new DynamicData<CanvasCourse[] | null>({
 	key: "canvas-courses",
 	ttlMs: 1000 * 60 * 60 * 24 * 30,
-	refreshIntervalMs: 1000 * 60 * 60 * 24 * 7,
+	requireInitialFetch: true,
 	refreshThresholdMs: 1000 * 60 * 60, // courses don't change often, but we say 1 hour to be safe
 	fetch: async () => {
 		const uid = await userId.get();
@@ -117,6 +139,37 @@ export const courseData = new DynamicData<CanvasCourse[] | null>({
 				currentGrade: enrollment.grades.currentGrade,
 				currentScore: enrollment.grades.currentScore
 			}
+		}));
+	}
+});
+
+/**
+ * dynamic data source for planner items. we unfortunately can't gather this data through GraphQL (it just
+ * doesn't support it), so we need to make a few REST requests. oh well.
+ */
+export const plannerItems = new DynamicData<PlannerItem[] | null>({
+	key: "planner-items",
+	ttlMs: 1000 * 60 * 60 * 24 * 30,
+	requireInitialFetch: false,
+	refreshIntervalMs: 1000 * 60 * 60 * 1, // refresh every hour
+	refreshThresholdMs: 1000 * 60 * 5, // likely to change pretty often
+	fetch: async () => {
+		const uid = await userId.get();
+		if(uid === null) return null;
+
+		// 5 days ago is arbitrary but meh
+		const startDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString();
+		const data = await canvasFetch<PlannerItem[]>(`/api/v1/planner/items?start_date=${startDate}&order=asc&per_page=30`);
+		if(!data) {
+			console.warn("Canvas planner items fetch returned no data");
+			return null;
+		}
+		
+		return data.map(v => ({
+			...v,
+			// remove some unnecessary data
+			context_image: undefined,
+			html_url: undefined
 		}));
 	}
 });

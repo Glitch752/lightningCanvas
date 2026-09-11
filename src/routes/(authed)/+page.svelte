@@ -41,12 +41,11 @@
                             goto(`/course/${course.id}`)
                         }}
                     >
-                        <img src={courseImages[i % courseImages.length]} alt="" />
-                        <!-- {course.name}{course.course_code ? ` (${course.course_code})` : ""} -->
+                        <img src={course.imageUrl ?? courseImages[i % courseImages.length]} alt="" loading="lazy" />
                         <a href={`/course/${course.id}`} class="course-info -vflex">
-                            <span class="course-name" title={course.original_name}>{course.name}</span>
-                            {#if course.course_code}
-                                <span class="course-code">{course.course_code}</span>
+                            <span class="course-name" title={course.fullName}>{course.displayedName}</span>
+                            {#if course.courseCode}
+                                <span class="course-code">{course.courseCode}</span>
                             {/if}
                         </a>
                     </div>

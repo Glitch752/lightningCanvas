@@ -3,8 +3,6 @@ import { courseData } from "$lib/server/canvas";
 
 export const load: PageServerLoad = async () => {
 	return {
-		courses: await courseData.load(
-            c => c?.filter(course => course.workflow_state === "available") ?? null
-        )
+		courses: await courseData.load()
 	};
 };

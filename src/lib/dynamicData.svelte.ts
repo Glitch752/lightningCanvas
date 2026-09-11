@@ -1,3 +1,4 @@
+import { browser } from "$app/env";
 import type { SKLoadDynamicData } from "$lib/server/dynamicData";
 import { writable } from "svelte/store";
 
@@ -8,7 +9,6 @@ let activeLoads = 0;
 function startLoad() {
 	activeLoads += 1;
 	dynamicDataLoading.set(true);
-	console.log("dynamic loading");
 
 	let finished = false;
 	return () => {
@@ -17,7 +17,6 @@ function startLoad() {
 
 		activeLoads = Math.max(0, activeLoads - 1);
 		dynamicDataLoading.set(activeLoads > 0);
-		console.log("dynamic loading finished");
 	};
 }
 
@@ -30,24 +29,27 @@ export function dynamicDataState<T>(v: () => SKLoadDynamicData<T>) {
 	let value = $state(data.cached?.value);
 	let loading = $state(true);
 	let error = $state<unknown>();
-	const finishLoad = startLoad();
 
-	$effect(() => {
-		value = data.cached?.value;
-		loading = true;
-		error = undefined;
-
-		void data.updated
-			.then((result) => {
-                if(result.kind === "updated") value = result.value;
-                else console.debug("dynamic data didn't change after initial update");
-            })
-			.catch((reason: unknown) => { error = reason; })
-			.finally(() => {
-                loading = false;
-                finishLoad();
-            });
-	});
+	// ignore loading the update if on the server
+	if(browser) {
+		const finishLoad = startLoad();
+		$effect(() => {
+			value = data.cached?.value;
+			loading = true;
+			error = undefined;
+	
+			void data.updated
+				.then((result) => {
+					if(result.kind === "updated") value = result.value;
+					else console.debug("dynamic data didn't change after initial update");
+				})
+				.catch((reason: unknown) => { error = reason; })
+				.finally(() => {
+					loading = false;
+					finishLoad();
+				});
+		});
+	}
 
 	return {
 		get value() { return value; },

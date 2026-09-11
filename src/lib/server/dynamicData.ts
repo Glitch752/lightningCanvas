@@ -1,6 +1,6 @@
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { dataDirectory } from "./data";
+import { dataDirectory, StoredData } from "./data";
 
 /** the stored data in a cache file for a dynamic data source */
 type StoredValue<T> = {
@@ -19,11 +19,13 @@ export type DynamicDataOptions<T> = {
 	fetch: () => Promise<T>;
 	/** how long a successfully fetched value is usable, in milliseconds */
 	ttlMs: number;
+	/** how long to wait before refetching the data, in milliseconds */
+	refreshThresholdMs: number;
 	/** refresh in the background on this interval, if present */
 	refreshIntervalMs?: number;
 	/** runs after a new value has been written; errors are logged and ignored */
 	onUpdated?: (value: T, previous: T | undefined) => Promise<void> | void;
-	/** optional comparison function for sending updated data to clients */
+	/** optional comparison function for sending updated data to clients. falls back to json stringification if not provided */
 	equals?: (a: T, b: T) => boolean;
 };
 
@@ -37,15 +39,15 @@ function safeKey(key: string): string {
 	return value;
 }
 
-/** check if a value is a valid StoredValue */
-function isStoredValue(value: unknown): value is StoredValue<unknown> {
+/** check if a value is a valid StoredValue. lies a bit about T. */
+function isStoredValue<T>(value: unknown): value is StoredValue<T> {
 	if(typeof value !== "object" || value === null) return false;
 	const record = value as Record<string, unknown>;
 	return "value" in record && typeof record.fetchedAt === "number" && typeof record.expiresAt === "number";
 }
 
 /**
- * a small store for server-side data that caches, stores, and asynchrnously refreshes data  
+ * a small store for server-side data that caches, stores, and asynchronously refreshes data  
  * safe to use from SvelteKit load functions (obviously).  
  *   
  * the intended use is to send a cached value from `.get()`, then stream a refreshed value from `.refresh()` to the client.  
@@ -59,21 +61,17 @@ function isStoredValue(value: unknown): value is StoredValue<unknown> {
  * };
  * ```
  */
-export class DynamicData<T> {
-    /** the full path to the cache file */
-	private readonly path: string;
-    /** in-memory cache */
-	private memory: StoredValue<T> | null | undefined;
+export class DynamicData<T> extends StoredData<StoredValue<T>> {
     /** to disallow multiple simultaneous refreshes */
 	private refreshPromise: Promise<RefreshResult<T>> | undefined;
     /** for refreshing */
 	private timer: ReturnType<typeof setInterval> | undefined;
 
 	constructor(private readonly options: DynamicDataOptions<T>) {
-		if(!Number.isFinite(options.ttlMs) || options.ttlMs <= 0) {
+		if(!Number.isFinite(options.ttlMs) || options.ttlMs <= 0)
 			throw new Error(`Invalid ttlMs for dynamic data '${options.key}'`);
-		}
-		this.path = join(dataDirectory, "cache", `${safeKey(options.key)}.json`);
+		
+		super(join("cache", `${safeKey(options.key)}.json`), isStoredValue<T>);
 
         // set up an interval to refresh the data in the background if necessary
 		if(options.refreshIntervalMs !== undefined) {
@@ -92,8 +90,7 @@ export class DynamicData<T> {
 		const stored = await this.read();
 		if(!stored) return undefined;
 		if(stored.expiresAt <= Date.now()) {
-			this.memory = null;
-			await rm(this.path, { force: true });
+			await this.delete();
 			return undefined;
 		}
 		return stored;
@@ -106,6 +103,10 @@ export class DynamicData<T> {
 
 		this.refreshPromise = (async () => {
 			const previous = await this.get();
+
+			if(previous && previous.expiresAt > Date.now() - this.options.refreshThresholdMs) {
+				return { kind: "unchanged" as const };
+			}
 
 			const value = await this.options.fetch();
 			const stored: StoredValue<T> = {
@@ -177,36 +178,5 @@ export class DynamicData<T> {
     /** clean up if being destroyed. necessary for data sources with a refresh interval. */
 	destroy(): void {
 		if(this.timer) clearInterval(this.timer);
-	}
-
-    /** read the cached data from disk or memory */
-	private async read(): Promise<StoredValue<T> | undefined> {
-		if(this.memory !== undefined) return this.memory || undefined;
-
-		try {
-			const parsed: unknown = JSON.parse(await readFile(this.path, "utf8"));
-			if(!isStoredValue(parsed)) { // sanity check
-				this.memory = null;
-				return undefined;
-			}
-			this.memory = parsed as StoredValue<T>;
-			return this.memory;
-		} catch(error) {
-			if((error as NodeJS.ErrnoException).code === "ENOENT") {
-				this.memory = null;
-				return undefined;
-			}
-			throw error;
-		}
-	}
-
-    /** write the cached data to disk */
-	private async write(value: StoredValue<T>): Promise<void> {
-		await mkdir(dirname(this.path), { recursive: true });
-        // atomically write, probably not necessary but just in case
-		const temporaryPath = `${this.path}.${process.pid}.tmp`;
-		await writeFile(temporaryPath, `${JSON.stringify(value)}\n`, "utf8");
-		await rename(temporaryPath, this.path);
-		this.memory = value;
 	}
 }

@@ -1,0 +1,33 @@
+query MyQuery($userId: ID!) {
+  legacyNode(_id: $userId, type: User) {
+    ... on User {
+      ...ActiveCourses
+    }
+  }
+}
+
+fragment ActiveCourses on User {
+  enrollments(currentOnly: true) {
+    course {
+      ...CourseInfo
+    }
+    grades {
+      currentGrade
+      currentScore
+    }
+  }
+}
+
+fragment CourseInfo on Course {
+  _id
+  courseCode
+  courseNickname
+  dashboardCard {
+    position
+    image
+  }
+  term {
+    name
+  }
+  name
+}

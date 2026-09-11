@@ -16,7 +16,10 @@ export const actions: Actions = {
 			const hostname = new URL(canvasHostname);
 			if(hostname.protocol !== 'https:') throw new Error("Canvas hostname must start with 'https://'");
 
-			await saveSettings({ canvasHostname: canvasHostname.replace(/\/$/, ""), canvasApiKey });
+			await saveSettings({
+				canvasHostname: canvasHostname.replace(/\/$/, ""),
+				canvasApiKey
+			});
 			return { saved: true };
 		} catch(error) {
 			return fail(400, { error: error instanceof Error ? error.message : "Invalid Canvas hostname" });

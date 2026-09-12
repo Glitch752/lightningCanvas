@@ -33,7 +33,7 @@
     <div class="courses -vflex">
         <h1>Courses <span class="count">({courseItems?.length ?? 0})</span></h1>
         {#if courseItems?.length === 0}
-            <p>No courses found.</p>
+            <p class="-empty">No courses found.</p>
         {:else}
             <div class="course-list">
                 {#each courseItems as course, i}
@@ -72,7 +72,7 @@
             </div>
         {/if}
         {#if courses.error}
-            <p>Error loading courses: {courses.error}</p>
+            <p class="-empty">Error loading courses: {courses.error}</p>
         {/if}
     </div>
     

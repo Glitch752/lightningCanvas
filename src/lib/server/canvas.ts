@@ -53,6 +53,9 @@ export type PlannerItem = {
 
 	submissions: {
 		submitted: boolean;
+		feedback?: {
+			comment?: string;
+		}
 	};
 
 	plannable_id: string;
@@ -167,6 +170,7 @@ export const plannerItems = new DynamicData<PlannerItem[] | null>({
 		
 		return data.map(v => ({
 			...v,
+			
 			// remove some unnecessary data
 			context_image: undefined,
 			html_url: undefined

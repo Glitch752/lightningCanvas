@@ -4,8 +4,12 @@
     import { dynamicDataState } from "$lib/dynamicData.svelte";
     import { goto } from "$app/navigation";
     import TodoList from "./TodoList.svelte";
+    import { ChevronDown, ChevronUp, ListCheck } from "@lucide/svelte";
+    import { SvelteSet } from "svelte/reactivity";
 
 	let { data }: { data: PageData } = $props();
+
+    const MAX_COURSE_TASKS_DISPLAYED = 5;
 
     pageData({
 		title: "Dashboard",
@@ -27,6 +31,23 @@
         ?.toSorted((a, b) => a.dashboardPosition - b.dashboardPosition)
         ?.map((c, i) => ({ ...c, color: `var(--misc-${(i % 6) + 1})`}))
     );
+
+    const plannerItemsByCourse = $derived(
+        plannerItems.value
+        ?.filter(item => item.context_type === "Course" && item.course_id && !item.submissions.submitted)
+        ?.reduce((acc, item) => {
+            if(!acc[item.course_id]) acc[item.course_id] = [];
+            acc[item.course_id].push(item);
+            return acc;
+        }, {} as Record<number, typeof plannerItems.value>)
+    );
+
+    let coursesExpanded = $state<SvelteSet<number>>(new SvelteSet());
+
+    // for testing
+    function duplicate<T>(arr: T[], times: number): T[] {
+        return Array.from({ length: times }, () => arr).flat();
+    }
 </script>
 
 <div class="page">
@@ -37,11 +58,13 @@
         {:else}
             <div class="course-list">
                 {#each courseItems as course, i}
+                    {@const cid = parseInt(course.id)}
+                    {@const plannerItemsForCourse = duplicate(plannerItemsByCourse?.[cid] ?? [], 8)}
                     <!-- svelte-ignore a11y_click_events_have_key_events,a11y_no_static_element_interactions -
                         we have ""better"" links for accessibility below, this is just for a full card clickable
                         area without nesting interactive elements -->
                     <div
-                        class="course -card -hover-hl"
+                        class="course -card -hover-hl -vflex"
                         style="--highlight: {course.color}"
                         onclick={e => {
                             if((e.target as HTMLElement)?.closest("a, button")) return;
@@ -67,6 +90,41 @@
                                 <span class="course-term">{course.termName}</span>
                             {/if}
                         </a>
+                        {#if plannerItemsForCourse.length > 0}
+                            <span class="task-header -hflex">
+                                <ListCheck /> Tasks <span class="count">({plannerItemsForCourse.length})</span>
+                            </span>
+                            {@const maxDisplayed = coursesExpanded.has(cid) ?
+                                plannerItemsForCourse.length : MAX_COURSE_TASKS_DISPLAYED}
+                            {#each plannerItemsForCourse.slice(0, maxDisplayed) as item}
+                                {@const dueAtDate = new Date(item.plannable.due_at)}
+                                <a
+                                    class="course-task -input -hflex"
+                                    href={`/course/${item.course_id}/assignments/${item.plannable.id}`}
+                                    title={item.plannable.title}
+                                >
+                                    <span class="title">{item.plannable.title}</span>
+                                    <span class="due" class:-error={dueAtDate < new Date()}>
+                                        {dueAtDate.toLocaleString([], { month: "short", day: "numeric" })}
+                                    </span>
+                                </a>
+                            {/each}
+                            {#if plannerItemsForCourse.length > maxDisplayed}
+                                <button class="course-task more -input -hflex" onclick={e => {
+                                    if(coursesExpanded.has(cid)) coursesExpanded.delete(cid);
+                                    else coursesExpanded.add(cid);
+                                }}>
+                                    <ChevronDown /> {plannerItemsForCourse.length - maxDisplayed} more
+                                </button>
+                            {/if}
+                            {#if coursesExpanded.has(cid) && plannerItemsForCourse.length > MAX_COURSE_TASKS_DISPLAYED}
+                                <button class="course-task more -input -hflex" onclick={e => {
+                                    coursesExpanded.delete(cid);
+                                }}>
+                                    <ChevronUp /> Show less
+                                </button>
+                            {/if}
+                        {/if}
                     </div>
                 {/each}
             </div>
@@ -105,6 +163,8 @@
     .course {
         border-top-color: var(--highlight);
         position: relative;
+        align-self: start;
+        padding-bottom: 0.5rem;
 
         img {
             width: 100%;
@@ -121,7 +181,7 @@
         }
     }
     .course-info {
-        margin: 0.5rem 1rem 1rem 1rem;
+        margin: 0.5rem 1rem 0.25rem 1rem;
         text-decoration: underline transparent;
         transition: text-decoration-color 200ms ease-out;
         
@@ -175,6 +235,47 @@
             font-size: var(--font-sm);
             color: var(--text-muted);
             padding: 0.125rem 0.25rem;
+        }
+    }
+
+    .task-header {
+        margin: 0.25rem 0.25rem 0.125rem 1rem;
+        font-size: var(--font-sm);
+        color: var(--text);
+        align-items: center;
+        gap: 0.25rem;
+
+        .count {
+            color: var(--text-muted);
+            font-size: var(--font-xs);
+            align-self: end;
+        }
+    }
+    .course-task {
+        padding: 0.125rem 0.5rem;
+        margin: 0.125rem 0.75rem;
+        font-size: var(--font-sm);
+        text-decoration: none;
+        gap: 0.75rem;
+        justify-content: space-between;
+
+        .title {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .due {
+            color: var(--text-muted);
+        }
+        
+        &.more {
+            ---bg: transparent;
+            align-items: center;
+            justify-content: start;
+            gap: 0.5rem;
+            border: none;
+            color: var(--text-muted);
+            margin: 0 0.75rem;
         }
     }
 }

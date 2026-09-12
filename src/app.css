@@ -71,7 +71,7 @@ input, textarea, select, button, .-input {
 	font-size: inherit;
 	color: inherit;
 
-	background-color: var(--surface);
+	background-color: var(---bg, var(--surface));
 	border-radius: var(--radius);
 	border: 1px solid var(--border);
 	outline: none;
@@ -170,6 +170,7 @@ a {
 	to { transform: rotate(360deg); }
 }
 
-.-error   { color: var(--danger); }
-.-warning { color: var(--warning); }
-.-success { color: var(--success); }
+/* kind of hacky way to win precedence */
+:not(#_).-error   { color: var(--danger); }
+:not(#_).-warning { color: var(--warning); }
+:not(#_).-success { color: var(--success); }

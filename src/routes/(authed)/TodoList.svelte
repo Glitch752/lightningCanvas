@@ -195,6 +195,9 @@ li {
     }
     &.completed-feedback {
         opacity: 0.9;
+        /* make feedback items stand out less to make it obvious they're not actionable */
+        border-color: transparent;
+        box-shadow: none;
         border-right-color: var(--text-muted);
     }
 }

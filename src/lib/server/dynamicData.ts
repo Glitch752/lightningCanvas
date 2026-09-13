@@ -37,11 +37,12 @@ export type DynamicDataOptions<T> = {
 /** the result of a refresh operation */
 export type RefreshResult<T> = { kind: "updated"; value: T } | { kind: "unchanged" };
 
-/** sanitize a key for use in a filename */
+/** sanitize a key for use as a path in the cache directory */
 function safeKey(key: string): string {
-	const value = key.replace(/[^a-zA-Z0-9._-]/g, "_");
-	if(!value) throw new Error("dynamic data keys can't be empty");
-	return value;
+	const parts = key.split("/").map((part) => part.replace(/[^a-zA-Z0-9._-]/g, "_"));
+	if(!key || parts.some((part) => !part || part === "." || part === ".."))
+		throw new Error("dynamic data keys can't contain empty or traversal path segments");
+	return parts.join("/");
 }
 
 /** check if a value is a valid StoredValue. lies a bit about T. */

@@ -79,9 +79,12 @@ export type CanvasCourseTab = {
 	hidden?: boolean;
 };
 
-export type CanvasCourseHome = {
+export type CanvasCourseGlobal = {
 	course: CanvasCourse | null;
 	tabs: CanvasCourseTab[];
+};
+
+export type CanvasCourseHome = {
 	page: { title?: string; body?: string } | null;
 	plannerItems: PlannerItem[] | null;
 };
@@ -195,28 +198,47 @@ export const plannerItems = new DynamicData<PlannerItem[] | null>({
 	}
 });
 
+const courseGlobalDataSources = new Map<string, DynamicData<CanvasCourseGlobal>>();
 const courseHomeDataSources = new Map<string, DynamicData<CanvasCourseHome>>();
 
-/** Dynamic data for a course home page and its course-scoped todo/feedback. */
+/** dynamic data for every page in a course, like navigation tabs. */
+export function courseGlobalData(courseId: string): DynamicData<CanvasCourseGlobal> {
+	let source = courseGlobalDataSources.get(courseId);
+	if(source) return source;
+
+	source = new DynamicData<CanvasCourseGlobal>({
+		key: `courses/${courseId}/global`,
+		ttlMs: 1000 * 60 * 60 * 24 * 30,
+		requireInitialFetch: true,
+		refreshThresholdMs: 1000 * 60 * 60,
+		fetch: async () => {
+			const courses = await courseData.get();
+			const course = courses?.value?.find((item) => item.id === courseId) ?? null;
+			const tabs = await canvasFetch<CanvasCourseTab[]>(`/api/v1/courses/${encodeURIComponent(courseId)}/tabs`);
+			return { course, tabs: tabs ?? [] };
+		}
+	});
+
+	courseGlobalDataSources.set(courseId, source);
+	return source;
+}
+
+/** dynamic data for a course home page and its course-scoped todo/feedback. */
 export function courseHomeData(courseId: string): DynamicData<CanvasCourseHome> {
 	let source = courseHomeDataSources.get(courseId);
 	if(source) return source;
 
 	source = new DynamicData<CanvasCourseHome>({
-		key: `canvas-course-home-${courseId}`,
+		key: `courses/${courseId}/home`,
 		ttlMs: 1000 * 60 * 60 * 24 * 30,
 		requireInitialFetch: true,
 		refreshThresholdMs: 1000 * 60 * 5,
-		refreshIntervalMs: 1000 * 60 * 60,
 		fetch: async () => {
 			const uid = await userId.get();
-			const courses = await courseData.get();
-			const course = courses?.value?.find((item) => item.id === courseId) ?? null;
-			if(uid === null) return { course, tabs: [], page: null, plannerItems: null };
+			if(uid === null) return { page: null, plannerItems: null };
 
 			const startDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString();
-			const [tabs, page, planner] = await Promise.all([
-				canvasFetch<CanvasCourseTab[]>(`/api/v1/courses/${encodeURIComponent(courseId)}/tabs`),
+			const [page, planner] = await Promise.all([
 				canvasFetch<{ title?: string; body?: string }>(`/api/v1/courses/${encodeURIComponent(courseId)}/front_page`),
 				canvasFetch<PlannerItem[]>(
 					`/api/v1/planner/items?start_date=${encodeURIComponent(startDate)}&order=asc&per_page=30&context_codes[]=course_${encodeURIComponent(courseId)}&context_codes[]=user_${encodeURIComponent(String(uid))}`
@@ -224,13 +246,12 @@ export function courseHomeData(courseId: string): DynamicData<CanvasCourseHome> 
 			]);
 
 			return {
-				course,
-				tabs: tabs ?? [],
 				page,
 				plannerItems: planner?.map((item) => ({ ...item, context_image: undefined, html_url: undefined })) ?? null
 			};
 		}
 	});
+	
 	courseHomeDataSources.set(courseId, source);
 	return source;
 }

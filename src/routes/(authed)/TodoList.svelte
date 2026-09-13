@@ -1,8 +1,8 @@
 <script lang="ts">
     import { type DynamicDataState } from "$lib/dynamicData.svelte";
-    import type { CanvasCourse, PlannerItem } from "$lib/server/canvas";
     import { Clock, RotateCcwClock } from "@lucide/svelte";
     import { formatRelative } from "$lib/datetime";
+    import type { CanvasCourse, PlannerItem } from "$lib/server/canvas/courses";
 
     const { plannerItems, courseItems }: {
         plannerItems: DynamicDataState<PlannerItem[] | null | undefined>,

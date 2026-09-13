@@ -1,6 +1,6 @@
+import { courseGlobalDataRegistry } from "$lib/server/canvas/courses";
 import type { LayoutServerLoad } from "./$types";
-import { courseGlobalData } from "$lib/server/canvas";
 
 export const load: LayoutServerLoad = async ({ params }) => ({
-	courseGlobal: await courseGlobalData(params.courseId).load()
+	courseGlobal: await courseGlobalDataRegistry.get(params.courseId).load()
 });

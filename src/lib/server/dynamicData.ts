@@ -1,5 +1,6 @@
+import { readFile, readdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
-import { StoredData } from "./data";
+import { dataDirectory, StoredData } from "./data";
 
 // TODO: cron refresh for dynamic data sources so they predictable fetch data
 
@@ -37,6 +38,27 @@ export type DynamicDataOptions<T> = {
 
 /** the result of a refresh operation */
 export type RefreshResult<T> = { kind: "updated"; value: T } | { kind: "unchanged" };
+
+/** lazily creates and retains one dynamic data source per key */
+export class DynamicDataRegistry<Key, Value> {
+	private readonly sources = new Map<Key, DynamicData<Value>>();
+
+	constructor(private readonly create: (key: Key) => DynamicData<Value>) {}
+
+	get(key: Key): DynamicData<Value> {
+		let source = this.sources.get(key);
+		if(!source) {
+			source = this.create(key);
+			this.sources.set(key, source);
+		}
+		return source;
+	}
+
+	destroy(): void {
+		for(const source of this.sources.values()) source.destroy();
+		this.sources.clear();
+	}
+}
 
 /** sanitize a key for use as a path in the cache directory */
 function safeKey(key: string): string {
@@ -86,7 +108,7 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
 				throw new Error(`Invalid refreshIntervalMs for dynamic data '${options.key}'`);
 			}
 			this.timer = setInterval(() => {
-				void this.refresh().catch((error) => console.error(`Failed to refresh ${options.key}`, error));
+				this.refresh().catch((error) => console.error(`Failed to refresh ${options.key}`, error));
 			}, options.refreshIntervalMs);
 			this.timer.unref?.();
 		}
@@ -195,3 +217,44 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
 		if(this.timer) clearInterval(this.timer);
 	}
 }
+
+async function findDynamicDataFiles(directory: string): Promise<string[]> {
+	let entries;
+	try {
+		entries = await readdir(directory, { withFileTypes: true });
+	} catch(error) {
+		if((error as NodeJS.ErrnoException).code === "ENOENT") return [];
+		throw error;
+	}
+
+	const files: string[] = [];
+	for(const entry of entries) {
+		const path = join(directory, entry.name);
+		if(entry.isDirectory()) files.push(...await findDynamicDataFiles(path));
+		else if(entry.isFile() && entry.name.endsWith(".json")) files.push(path);
+	}
+	return files;
+}
+
+/** remove expired dynamic data cache entries */
+export async function garbageCollectDynamicData(): Promise<number> {
+	const files = await findDynamicDataFiles(join(dataDirectory, "cache"));
+	let removed = 0;
+	for(const path of files) {
+		try {
+			const value = JSON.parse(await readFile(path, "utf8")) as Record<string, unknown>;
+			if(typeof value.expiresAt === "number" && value.expiresAt <= Date.now()) {
+				await unlink(path);
+				removed += 1;
+			}
+		} catch(error) {
+			console.warn(`Unable to inspect dynamic-data cache ${path}`, error);
+		}
+	}
+	return removed;
+}
+
+garbageCollectDynamicData().catch((error) => console.error("Failed to gc dynamic data", error));
+setInterval(() => {
+	garbageCollectDynamicData().catch((error) => console.error("Failed to gc dynamic data", error));
+}, 1000 * 60 * 60 * 24); // gc every 24 hours

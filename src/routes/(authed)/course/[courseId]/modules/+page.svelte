@@ -2,7 +2,8 @@
 	import { page } from "$app/state";
 	import { dynamicDataState } from "$lib/dynamicData.svelte";
 	import { BookOpen, Check, ChevronDown, ChevronRight, CircleQuestionMark, ClipboardList, ExternalLink, FileText, MessageSquare, Paperclip, Pencil } from "@lucide/svelte";
-	import type { CanvasModuleItem, CanvasModuleItemType } from "$lib/server/canvas";
+	import type { CanvasModuleItem } from "$lib/server/canvas/modules";
+	import type { CanvasModuleItemType } from "$lib/server/canvas/modules";
 	import type { PageData } from "./$types";
 
 	let { data }: { data: PageData } = $props();

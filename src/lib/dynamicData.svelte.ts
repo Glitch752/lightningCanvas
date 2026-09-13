@@ -47,7 +47,7 @@ export function dynamicDataState<T>(v: () => SKLoadDynamicData<T>): DynamicDataS
 			loading = true;
 			error = undefined;
 	
-			void data.updated
+			data.updated
 				.then((result) => {
 					if(result.kind === "updated") value = result.value;
 					else console.debug("dynamic data didn't change after initial update");

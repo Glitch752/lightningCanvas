@@ -1,8 +1,8 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
-    import type { CanvasCourse, PlannerItem } from "$lib/server/canvas";
     import { ChevronDown, ChevronUp, ListCheck } from "@lucide/svelte";
     import type { PageData } from "./$types";
+    import type { CanvasCourse, PlannerItem } from "$lib/server/canvas/courses";
 
     const MAX_COURSE_TASKS_DISPLAYED = 5;
 

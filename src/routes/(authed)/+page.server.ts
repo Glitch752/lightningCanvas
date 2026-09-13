@@ -1,10 +1,10 @@
+import { courseData, plannerItems } from "$lib/server/canvas/courses";
 import type { PageServerLoad } from "./$types";
-import { courseData, plannerItems as plannerItemData } from "$lib/server/canvas";
 
 export const load: PageServerLoad = async () => {
-	const [courses, plannerItems] = await Promise.all([
+	const [courses, plannerItemData] = await Promise.all([
 		courseData.load(),
-		plannerItemData.load()
+		plannerItems.load()
 	]);
-	return { courses, plannerItems };
+	return { courses, plannerItems: plannerItemData };
 };

@@ -6,6 +6,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
+		"check": "svelte-check --no-tsconfig --ignore node_modules",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''"
 	},
@@ -15,6 +16,7 @@
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@types/node": "^22.20.2",
 		"svelte": "^5.56.1",
+		"svelte-check": "^4.7.6",
 		"typescript": "^5.3.3",
 		"vite": "^8.0.16"
 	},

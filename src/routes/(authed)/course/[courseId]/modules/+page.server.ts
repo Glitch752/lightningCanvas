@@ -1,6 +1,6 @@
+import { courseModulesDataRegistry } from "$lib/server/canvas/modules";
 import type { PageServerLoad } from "./$types";
-import { courseModulesData } from "$lib/server/canvas";
 
 export const load: PageServerLoad = async ({ params }) => ({
-	modules: await courseModulesData(params.courseId).load()
+	modules: await courseModulesDataRegistry.get(params.courseId).load()
 });

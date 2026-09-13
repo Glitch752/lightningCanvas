@@ -100,6 +100,8 @@
         border-radius: var(--radius) var(--radius) 0 0;
         opacity: 0.25;
 
+        cursor: pointer;
+
         /* fade out bottom and vignette */
         mask-image:
             linear-gradient(to top, transparent 0, black 3rem),

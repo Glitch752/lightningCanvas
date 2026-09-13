@@ -31,11 +31,6 @@
             return acc;
         }, {} as Record<number, typeof plannerItems.value>)
     );
-
-    // for testing
-    function duplicate<T>(arr: T[], times: number): T[] {
-        return Array.from({ length: times }, () => arr).flat();
-    }
 </script>
 
 <div class="page">

@@ -44,7 +44,7 @@
             {#each internalTabs as tab}
                 <a
                     href={localTabHref(tab.id)}
-                    class:active={page.route.id === `/course/${courseId}${localTabPaths[tab.id]}`}
+                    class:active={page.route.id === `/(authed)/course/[courseId]${localTabPaths[tab.id]}`}
                 >{tab.label}</a>
             {/each}
             {#each externalTabs as tab}
@@ -81,9 +81,13 @@
     nav { gap: 0.25rem; }
     nav a {
         padding: 0.4rem 0.5rem;
+        border-radius: 0 var(--radius) var(--radius) 0;
+
         &.active {
             background-color: var(--bg-elevated);
-            border-radius: var(--radius);
+            color: var(--text);
+            font-weight: bold;
+            border-left: 1px solid var(--primary);
         }
     }
 }
@@ -93,6 +97,8 @@
 }
 
 @media (max-width: 1000px) {
-    .course-layout { grid-template-columns: 16rem 1fr; }
+    .course-layout {
+        grid-template-columns: 16rem 1fr;
+    }
 }
 </style>

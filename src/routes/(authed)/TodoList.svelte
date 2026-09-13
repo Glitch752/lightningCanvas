@@ -148,6 +148,7 @@ h2.time-header {
 li {
     list-style: none;
     padding: 0.35rem 0.35rem 0.35rem 0.5rem;
+    border-radius: var(--radius) 0 0 var(--radius);
     border-right-color: var(--highlight);
     gap: 0.25rem;
 

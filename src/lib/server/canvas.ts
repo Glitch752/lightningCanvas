@@ -89,6 +89,36 @@ export type CanvasCourseHome = {
 	plannerItems: PlannerItem[] | null;
 };
 
+export type CanvasModuleItemType = "File" | "Page" | "Discussion" | "Assignment" | "Quiz" | "ExternalUrl" | "SubHeader";
+export type CanvasModuleItem = {
+	id: number;
+	title: string;
+	type: CanvasModuleItemType | string;
+	content_id?: number;
+	page_url?: string;
+	external_url?: string;
+	url?: string;
+	indent: number;
+	position: number;
+	completion_requirement?: {
+		type: string;
+		completed?: boolean;
+	};
+};
+
+export type CanvasModule = {
+	id: number;
+	name: string;
+	position: number;
+	items_count: number;
+	state?: string;
+	items: CanvasModuleItem[];
+};
+
+export type CanvasCourseModules = {
+	modules: CanvasModule[];
+};
+
 function stripGQLWhitespace(query: string): string {
 	return query.replace(/\s+/g, " ").trim();
 }
@@ -175,7 +205,7 @@ export const plannerItems = new DynamicData<PlannerItem[] | null>({
 	ttlMs: 1000 * 60 * 60 * 24 * 30,
 	requireInitialFetch: false,
 	refreshIntervalMs: 1000 * 60 * 60 * 1, // refresh every hour
-	refreshThresholdMs: 1000 * 60 * 5, // likely to change pretty often
+	refreshThresholdMs: 1000 * 60 * 10, // likely to change pretty often
 	fetch: async () => {
 		const uid = await userId.get();
 		if(uid === null) return null;
@@ -200,6 +230,7 @@ export const plannerItems = new DynamicData<PlannerItem[] | null>({
 
 const courseGlobalDataSources = new Map<string, DynamicData<CanvasCourseGlobal>>();
 const courseHomeDataSources = new Map<string, DynamicData<CanvasCourseHome>>();
+const courseModulesDataSources = new Map<string, DynamicData<CanvasCourseModules>>();
 
 /** dynamic data for every page in a course, like navigation tabs. */
 export function courseGlobalData(courseId: string): DynamicData<CanvasCourseGlobal> {
@@ -253,5 +284,28 @@ export function courseHomeData(courseId: string): DynamicData<CanvasCourseHome> 
 	});
 	
 	courseHomeDataSources.set(courseId, source);
+	return source;
+}
+
+/** dynamic data for course modules */
+export function courseModulesData(courseId: string): DynamicData<CanvasCourseModules> {
+	let source = courseModulesDataSources.get(courseId);
+	if(source) return source;
+
+	source = new DynamicData<CanvasCourseModules>({
+		key: `courses/${courseId}/modules`,
+		ttlMs: 1000 * 60 * 60 * 24 * 30,
+		requireInitialFetch: true,
+		refreshThresholdMs: 1000 * 60 * 15,
+		refreshIntervalMs: 1000 * 60 * 60 * 24, // once a day, refresh in the background
+		fetch: async () => {
+			const modules = await canvasFetch<CanvasModule[]>(
+				`/api/v1/courses/${encodeURIComponent(courseId)}/modules?include[]=items&per_page=100`
+			);
+			return { modules: (modules ?? []).toSorted((a, b) => a.position - b.position) };
+		}
+	});
+
+	courseModulesDataSources.set(courseId, source);
 	return source;
 }

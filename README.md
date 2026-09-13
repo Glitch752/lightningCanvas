@@ -17,7 +17,7 @@ Doesn't replicate the entire (or even a large fraction of) Canvas functionality,
 - [x] course modules page
 - [x] cache GC
 - [x] course pages... page and rendering
-- [ ] course assignment pages and rendering
+- [x] course assignment pages and rendering
 - [ ] course assignment submission for certain simple types (text entry and url maybe)
 - [ ] course grades page
 - [ ] calendar page

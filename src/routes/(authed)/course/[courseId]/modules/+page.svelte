@@ -182,6 +182,7 @@
         .item-title {
             overflow: hidden;
             text-overflow: ellipsis;
+            flex: 1;
         }
         .item-details {
             color: var(--text-muted);

@@ -173,3 +173,15 @@ a {
 :not(#_).-error   { color: var(--danger); }
 :not(#_).-warning { color: var(--warning); }
 :not(#_).-success { color: var(--success); }
+
+/* improve webkit scrollbar styles */
+::-webkit-scrollbar {
+	width: 0.5rem;
+}
+::-webkit-scrollbar-track {
+	background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+	background: var(--border);
+	border-radius: var(--radius);
+}

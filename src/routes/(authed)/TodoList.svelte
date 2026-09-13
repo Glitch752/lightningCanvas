@@ -54,7 +54,7 @@
         <h2 class="time-header -hflex" class:completed={!hasIncompleteItems}>
             {dateFormatter.format(new Date(date))}
             <!-- if before today, show a little overdue icon -->
-            {#if new Date(date) < new Date() && hasIncompleteItems}
+            {#if new Date(date + 24 * 60 * 60 * 1000) < new Date() && hasIncompleteItems}
                 <span title="Overdue" class="icon -error"><Clock /></span>
             {/if}
         </h2>

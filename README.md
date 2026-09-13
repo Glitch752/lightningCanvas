@@ -4,7 +4,7 @@ _because lightning means quick, right?_
   
 A work-in-progress single-user-focused [Canvas LMS](https://canvas.instructure.com/) frontend using API tokens optimized for one thing: speed.
 
-On slow computers and networks, I've always been fed up with how long Canvas takes to load. This project aims to make the fastest Canvas frontend possible by caching client-side, proactively polling slow API endpoints, reducing unnecessary network requests, using fast SvelteKit SSR with page preloading, and removing all the unnecessary bloat.
+On slow computers and networks, I've always been fed up with how long Canvas takes to load. This project aims to make the fastest Canvas frontend possible by caching client-side, proactively polling slow API endpoints, reducing unnecessary network requests, using fast SvelteKit SSR with page preloading, replacing slow embeds (*cough* youtube), and removing all the unnecessary bloat.
 
 Secondary goals are customizability, better use of space than the official Canvas frontend, better views for things like tasks and grades, and acting as a webhook client to push calendar/task data to other apps.
 
@@ -15,8 +15,8 @@ Doesn't replicate the entire (or even a large fraction of) Canvas functionality,
 - [x] todo list
 - [x] render course home page
 - [x] course modules page
-- [ ] cache GC
-- [ ] course pages... page and rendering
+- [x] cache GC
+- [x] course pages... page and rendering
 - [ ] course assignment pages and rendering
 - [ ] course assignment submission for certain simple types (text entry and url maybe)
 - [ ] course grades page

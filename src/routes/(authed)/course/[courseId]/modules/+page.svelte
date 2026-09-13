@@ -161,13 +161,15 @@
         &[data-type="ExternalUrl"] {
             ---text: var(--primary);
         }
+        &[data-type="Page"] {
+            ---text: var(--text-muted);
+        }
         
         &:not(:first-child) {
             border-top: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
         }
 
         .item-icon {
-            color: var(--text-muted);
             line-height: 1;
             padding-top: 0.1rem;
             

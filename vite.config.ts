@@ -8,7 +8,10 @@ export default defineConfig({
 			compilerOptions: {
 				// force runes mode for the project but now libraries
 				runes: ({ filename }) =>
-					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
+					filename.split(/[/\\]/).includes('node_modules') ? undefined : true,
+				experimental: {
+					async: true
+				}
 			},
 
 			// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.

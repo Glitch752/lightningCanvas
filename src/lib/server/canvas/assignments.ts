@@ -40,7 +40,7 @@ export type CanvasSubmission = {
     workflow_state: "submitted" | "unsubmitted" | "graded" | "pending_review" | string;
 };
 
-/** Dynamic data for an individual assignment in a course. */
+/** dynamic data for an individual assignment in a course */
 export const courseAssignmentDataRegistry = new DynamicDataRegistry<string, CanvasAssignment | null>((key) => {
     const separator = key.indexOf("/");
     const courseId = key.slice(0, separator);

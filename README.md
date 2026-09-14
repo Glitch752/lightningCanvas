@@ -18,10 +18,10 @@ Doesn't replicate the entire (or even a large fraction of) Canvas functionality,
 - [x] cache GC
 - [x] course pages... page and rendering
 - [x] course assignment pages and rendering
+- [x] course grades page
 - [ ] course assignment submission for certain simple types (text entry and url maybe)
-- [ ] course grades page
 - [ ] calendar page
-- [ ] external calendar sync
+- [ ] external calendar/tasks sync
 
 - [ ] link multiple Canvas accounts/campus instances
 - [ ] allow adding custom course-like items on the dashboard for courses that don't exist in Canvas

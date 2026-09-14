@@ -5,11 +5,21 @@
 	import type { CanvasModuleItem } from "$lib/server/canvas/modules";
 	import type { CanvasModuleItemType } from "$lib/server/canvas/modules";
 	import type { PageData } from "./$types";
+    import { pageData } from "../../../../+layout.svelte";
+    import { getGlobalCourse } from "../+layout.svelte";
 
 	let { data }: { data: PageData } = $props();
 	
     const modules = dynamicDataState(() => data.modules);
+
+    const globalCourse = getGlobalCourse();
+    const course = $derived(globalCourse.value?.course);
+    pageData(() => ({
+        title: `${course?.displayedName ?? course?.fullName ?? "Unknown course"} - Modules`,
+        canvasUrl: `${data.settings.canvasHostname}/courses/${page.params.courseId}/modules`
+    }));
 	
+    // TODO: persist collapsed state, ideally on the server but maybe just in local storage
     let expanded = $state(new Set<number>(modules.value?.modules.map(m => m.id) ?? []));
 	function toggle(moduleId: number): void {
 		const next = new Set(expanded);
@@ -183,11 +193,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             flex: 1;
-        }
-        .item-details {
-            color: var(--text-muted);
-            font-size: var(--font-xs);
-            margin-top: 0.15rem;
         }
     }
 }

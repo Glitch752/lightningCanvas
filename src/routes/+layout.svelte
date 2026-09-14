@@ -10,9 +10,9 @@
 	});
 
 	/** Automatically set the page data for this page */
-	export function pageData(data: PageData) {
+	export function pageData(data: () => PageData) {
 		$effect(() => {
-			pageDataStore.set(data);
+			pageDataStore.set(data());
 		});
 	}
 </script>

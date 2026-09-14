@@ -4,13 +4,19 @@
     import { dynamicDataState } from "$lib/dynamicData.svelte";
     import TodoList from "../../TodoList.svelte";
     import UserContentViewer from "$lib/components/UserContentViewer.svelte";
+    import { pageData } from "../../../+layout.svelte";
+    import { getGlobalCourse } from "./+layout.svelte";
 
     let { data }: { data: PageData } = $props();
     const courseHome = dynamicDataState(() => data.courseHome);
-    const courseGlobal = dynamicDataState(() => data.courseGlobal);
-
     const courseId = $derived(page.params.courseId);
-    const course = $derived(courseGlobal.value?.course);
+
+    const globalCourse = getGlobalCourse();
+    const course = $derived(globalCourse.value?.course);
+    pageData(() => ({
+        title: course?.displayedName ?? course?.fullName ?? `Course ${courseId}`,
+        canvasUrl: course ? `${data.settings.canvasHostname}/courses/${course.id}` : null
+    }));
 </script>
 
 <div class="course-page">

@@ -1,11 +1,16 @@
+<script lang="ts" module>
+    export const [getGlobalCourse, setGlobalCourse] = createContext<DynamicDataState<CanvasCourseGlobal>>();
+</script>
+
 <script lang="ts">
     import { page } from "$app/state";
-    import type { Snippet } from "svelte";
     import type { LayoutData } from "./$types";
-    import { pageData } from "../../../+layout.svelte";
-    import { dynamicDataState } from "$lib/dynamicData.svelte";
+    import { dynamicDataState, type DynamicDataState } from "$lib/dynamicData.svelte";
+    import type { CanvasCourseGlobal } from "$lib/server/canvas/courses";
+    import { createContext, type Snippet } from "svelte";
 
     let { children, data }: { children: Snippet; data: LayoutData } = $props();
+
     const courseGlobal = dynamicDataState(() => data.courseGlobal);
     const courseId = $derived(page.params.courseId);
     const course = $derived(courseGlobal.value?.course);
@@ -18,6 +23,8 @@
     const internalTabs = $derived(tabs.filter((tab) => tab.id in localTabPaths));
     const externalTabs = $derived(tabs.filter((tab) => !(tab.id in localTabPaths)));
 
+    setGlobalCourse(courseGlobal);
+
     function makeAbsolute(url: string): string {
         if(url.startsWith("http")) return url;
         if(data.settings.canvasHostname) return `${data.settings.canvasHostname}${url}`;
@@ -27,11 +34,6 @@
     function localTabHref(tabId: string): string {
         return `/course/${courseId}${localTabPaths[tabId]}`;
     }
-
-    pageData({
-        get title() { return course?.displayedName ?? "Course"; },
-        get canvasUrl() { return course ? `${data.settings.canvasHostname}/courses/${course.id}` : null; }
-    });
 </script>
 
 <div class="course-layout">

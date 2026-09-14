@@ -3,11 +3,17 @@
     import UserContentViewer from "$lib/components/UserContentViewer.svelte";
 	import { dynamicDataState } from "$lib/dynamicData.svelte";
 	import type { PageData } from "./$types";
+    import { pageData } from "../../../../../+layout.svelte";
 
 	let { data }: { data: PageData } = $props();
 	const coursePage = dynamicDataState(() => data.page);
 
 	const pageId = $derived(currentPage.params.pageId);
+
+    pageData(() => ({
+        title: coursePage.value?.page?.title ?? pageId ?? "",
+        canvasUrl: `${data.settings.canvasHostname}/courses/${currentPage.params.courseId}/pages/${pageId}`
+    }));
 </script>
 
 <div class="page">

@@ -4,10 +4,10 @@
 
 	let { form }: { form: ActionData } = $props();
 
-	pageData({
+	pageData(() => ({
 		title: "Login",
 		canvasUrl: null
-	});
+	}));
 </script>
 
 <main class="-cgrid">

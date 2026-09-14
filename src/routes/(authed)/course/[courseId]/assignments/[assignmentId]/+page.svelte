@@ -3,12 +3,18 @@
 	import { ExternalLink } from "@lucide/svelte";
 	import UserContentViewer from "$lib/components/UserContentViewer.svelte";
 	import type { PageData } from "./$types";
+	import { pageData } from "../../../../../+layout.svelte";
 
 	let { data }: { data: PageData } = $props();
 	const assignment = dynamicDataState(() => data.assignment);
 	const canvasAssignment = $derived(assignment.value);
 	const submission = $derived(canvasAssignment?.submission);
 	const isSubmitted = $derived(Boolean(submission?.submitted_at) || submission?.workflow_state === "submitted" || submission?.workflow_state === "graded");
+	
+	pageData(() => ({
+		title: canvasAssignment?.name ?? "Assignment",
+		canvasUrl: canvasAssignment?.html_url ?? null
+	}));
 
 	function formatDate(value: string | null): string | undefined {
 		if(!value) return undefined;

@@ -9,10 +9,10 @@
     // svelte-ignore state_referenced_locally
     let canvasHostname = $state(data.settings.canvasHostname);
 
-    pageData({
+    pageData(() => ({
         title: "Settings",
         canvasUrl: null
-    });
+    }));
 </script>
 
 <div class="page -vflex">

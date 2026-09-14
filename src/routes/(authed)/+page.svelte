@@ -3,16 +3,14 @@
     import { pageData } from "../+layout.svelte";
     import { dynamicDataState } from "$lib/dynamicData.svelte";
     import TodoList from "./TodoList.svelte";
-    import { SvelteSet } from "svelte/reactivity";
     import CourseCard from "./CourseCard.svelte";
 
 	let { data }: { data: PageData } = $props();
 
-    pageData({
+    pageData(() => ({
 		title: "Dashboard",
-		// svelte-ignore state_referenced_locally
 		canvasUrl: data.settings.canvasHostname
-	});
+	}));
 
     const courses = dynamicDataState(() => data.courses);
     const plannerItems = dynamicDataState(() => data.plannerItems);

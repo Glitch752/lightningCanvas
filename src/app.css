@@ -174,14 +174,11 @@ a {
 :not(#_).-warning { color: var(--warning); }
 :not(#_).-success { color: var(--success); }
 
-/* improve webkit scrollbar styles */
-::-webkit-scrollbar {
-	width: 0.5rem;
-}
-::-webkit-scrollbar-track {
-	background: var(--surface);
-}
-::-webkit-scrollbar-thumb {
-	background: var(--border);
-	border-radius: var(--radius);
+/*
+ * improve webkit scrollbar styles
+ * we also want to preserve overlay scrollbars where applicable so we can't use ::-webkit-scrollbar
+ */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: var(--border) var(--bg);
 }

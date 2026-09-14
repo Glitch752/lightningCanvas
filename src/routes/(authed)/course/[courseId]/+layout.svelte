@@ -68,10 +68,10 @@
     display: grid;
     grid-template-columns: 14rem minmax(0, 1fr);
     min-height: 100%;
+    gap: 1rem;
 }
 
 .course-tabs {
-    padding: 1rem;
     gap: 0.5rem;
 
     h1 { font-size: var(--font-lg); }

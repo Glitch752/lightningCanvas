@@ -4,10 +4,10 @@
 	import type { PageData } from "./$types";
     import { pageData } from "../../+layout.svelte";
     import { visualSettings, type VisualSettings } from "$lib/settings";
+    import { enhance } from "$app/forms";
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
-    // svelte-ignore state_referenced_locally
-    let canvasHostname = $state(data.settings.canvasHostname);
+    let canvasHostname = $derived(data.settings.canvasHostname);
 
     pageData(() => ({
         title: "Settings",
@@ -17,7 +17,16 @@
 
 <div class="page -vflex">
 	<h1>Settings</h1>
-	<form method="POST" class="-vflex">
+	<form
+        method="POST"
+        class="-vflex"
+        use:enhance={() => {
+            // this does work without turning off reset, but it avoids flashing
+            return async ({ update }) => {
+                await update({ reset: false });
+            };
+        }}
+    >
 		<div class="-label-inset">
 			<label for="canvasHostname">Canvas hostname</label>
 			<input
@@ -35,7 +44,7 @@
 				id="canvasApiKey"
 				name="canvasApiKey"
 				type="password"
-				value={data.settings.canvasApiKey}
+				bind:value={data.settings.canvasApiKey}
 				required
 			/>
             {#if canvasHostname && new URL(canvasHostname).hostname}
@@ -76,7 +85,6 @@
 
 <style lang="scss">
 .page {
-    padding: 1rem;
     gap: 1.5rem;
     width: min(100%, 600px);
 }

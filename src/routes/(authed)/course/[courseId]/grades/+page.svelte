@@ -108,7 +108,6 @@
 .grades-page {
     max-width: 120ch;
     margin: 0 auto;
-    padding: 1rem 0.5rem;
 }
 
 .page-header {

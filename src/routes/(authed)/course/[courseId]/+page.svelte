@@ -50,13 +50,13 @@
     grid-template-columns: minmax(0, 1fr) 20rem;
     grid-template-areas: "content todo";
     min-height: 100%;
+    gap: 1rem;
 }
 .home-content {
     grid-area: content;
 }
 .course-todo {
     grid-area: todo;
-    padding: 1rem;
     gap: 1rem;
 }
 

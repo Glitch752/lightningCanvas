@@ -147,7 +147,6 @@
 	gap: 1.5rem;
 	max-width: 140ch;
 	margin: 0 auto;
-	padding: 1rem 0.5rem;
 
     .assignment-content {
         grid-area: content;

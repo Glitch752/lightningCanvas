@@ -62,9 +62,9 @@
 .page {
     display: grid;
     grid-template-columns: 1fr 20rem;
+    gap: 1rem;
 }
 .courses, .todo {
-    padding: 0.5rem 1rem 1rem 1rem;
     gap: 1rem;
 
     h1 .count {

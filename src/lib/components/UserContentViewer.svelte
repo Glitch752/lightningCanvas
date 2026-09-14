@@ -52,6 +52,8 @@
 
         // pass 4: replace iframes with lighter versions where applicable.
         // for now, just youtube embeds, but we could add more in the future.
+        // TODO: custom google slides embed with prerendered slides? not sure how feasible that is but
+        // the default embed is sooo heavy
         let youtubeLoaded = false;
         for(const element of node.querySelectorAll<HTMLIFrameElement>("disabled-iframe")) {
             const src = element.getAttribute("src") ?? "";

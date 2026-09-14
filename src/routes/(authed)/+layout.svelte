@@ -5,6 +5,7 @@
 	import type { LayoutData } from "./$types";
     import type { Snippet } from "svelte";
     import { dynamicDataLoading } from "$lib/dynamicData.svelte";
+    import { enhance } from "$app/forms";
   	
 	let { children, data }: { children: Snippet, data: LayoutData } = $props();
 </script>
@@ -79,6 +80,7 @@ nav {
 main {
 	grid-area: main;
 	overflow-y: auto;
+    padding: 1rem;
 }
 footer {
 	grid-area: footer;

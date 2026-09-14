@@ -110,7 +110,6 @@
 .modules-page {
 	max-width: 100ch;
 	margin: 0 auto;
-	padding: 1rem;
 }
 
 .page-header {

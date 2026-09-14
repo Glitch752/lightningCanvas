@@ -25,21 +25,13 @@
     let expanded = $state(false);
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events,a11y_no_static_element_interactions -
-    we have ""better"" links for accessibility below, this is just for a full card clickable
-    area without nesting interactive elements -->
-<div
-    class="course -card -hover-hl -vflex"
-    style="--highlight: {course.color}"
-    onclick={e => {
-        if((e.target as HTMLElement)?.closest("a, button")) return;
-        goto(`/course/${course.id}`)
-    }}
->
-    <img src={
-        (data.settings.visual.useCourseImages ? course.imageUrl : null) ??
-        courseImages[i % courseImages.length]
-    } alt="" loading="lazy" />
+<div class="course -card -hover-hl -vflex" style="--highlight: {course.color}">
+    <a href={`/course/${course.id}`}>
+        <img src={
+            (data.settings.visual.useCourseImages ? course.imageUrl : null) ??
+            courseImages[i % courseImages.length]
+        } alt="" loading="lazy" />
+    </a>
     <a href={`/course/${course.id}/grades`} class="course-grade -vflex">
         <span class="grade -card">{course.grade.currentGrade ?? "n/a"}</span>
         {#if course.grade.currentScore}
@@ -59,6 +51,7 @@
         <span class="task-header -hflex">
             <ListCheck /> Tasks <span class="count">({plannerItemsForCourse.length})</span>
         </span>
+        
         {@const maxDisplayed = expanded ? plannerItemsForCourse.length : MAX_COURSE_TASKS_DISPLAYED}
         {#each plannerItemsForCourse.slice(0, maxDisplayed) as item}
             {@const dueAtDate = new Date(item.plannable.due_at)}
@@ -100,17 +93,15 @@
         border-radius: var(--radius) var(--radius) 0 0;
         opacity: 0.25;
 
-        cursor: pointer;
-
         /* fade out bottom and vignette */
         mask-image:
-            linear-gradient(to top, transparent 0, black 3rem),
-            radial-gradient(circle at center, black 0%, rgba(0, 0, 0, 0.5) 100%);
+            linear-gradient(to top, transparent 0, black 2.5rem),
+            radial-gradient(circle at center, black 0%, black 50%, rgba(0, 0, 0, 0.5) 100%);
         mask-composite: intersect;
     }
 }
 .course-info {
-    margin: 0.5rem 1rem 0.25rem 1rem;
+    margin: 0 1rem 0.25rem 1rem;
     text-decoration: underline transparent;
     transition: text-decoration-color 200ms ease-out;
     
@@ -152,8 +143,12 @@
     left: 0.5rem;
     gap: 0.25rem;
     align-items: start;
-    text-decoration: none;
+    text-decoration: underline transparent;
+    transition: text-decoration-color 200ms ease-out;
 
+    &:hover {
+        text-decoration: underline var(--highlight);
+    }
     .grade {
         font-size: var(--font-xl);
         font-weight: bold;
@@ -182,17 +177,17 @@
 }
 .course-task {
     padding: 0.125rem 0.5rem;
-    margin: 0.125rem 0.75rem;
+    margin: 0.25rem 0.75rem;
     font-size: var(--font-sm);
     text-decoration: none;
     gap: 0.75rem;
     justify-content: space-between;
     border-left-color: var(--highlight);
+    white-space: nowrap;
 
     .title {
         overflow: hidden;
         text-overflow: ellipsis;
-        white-space: nowrap;
     }
     .due {
         color: var(--text-muted);

@@ -2,9 +2,15 @@ import { fail } from "@sveltejs/kit";
 import type { Actions } from "./$types";
 import { updateVisualSettings } from "$lib/settings";
 import { getSettings, saveSettings } from "$lib/server/settings";
+import { clearDynamicDataCache } from "$lib/server/dynamicData";
 
 export const actions: Actions = {
-	default: async ({ request }) => {
+	clearCache: async () => {
+		await clearDynamicDataCache();
+		return { cacheCleared: true, message: "Cleared dynamic data cache" };
+	},
+
+	saveSettings: async ({ request }) => {
 		const formData = await request.formData();
 		const canvasHostname = formData.get("canvasHostname");
 		const canvasApiKey = formData.get("canvasApiKey");

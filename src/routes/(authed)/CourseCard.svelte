@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { goto } from "$app/navigation";
     import { ChevronDown, ChevronUp, ListCheck } from "@lucide/svelte";
     import type { PageData } from "./$types";
     import type { CanvasCourse, PlannerItem } from "$lib/server/canvas/courses";
+    import { getPlannerLink } from "./TodoList.svelte";
 
     const MAX_COURSE_TASKS_DISPLAYED = 5;
 
@@ -57,7 +57,7 @@
             {@const dueAtDate = new Date(item.plannable.due_at)}
             <a
                 class="course-task -input -hflex"
-                href={`/course/${item.course_id}/assignments/${item.plannable.id}`}
+                href={getPlannerLink(data.settings.canvasHostname, item)}
                 title={item.plannable.title}
             >
                 <span class="title">{item.plannable.title}</span>

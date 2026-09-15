@@ -1,4 +1,4 @@
-import { readFile, readdir, unlink } from "node:fs/promises";
+import { readFile, readdir, rm, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import { dataDirectory, StoredData } from "./data";
 
@@ -91,6 +91,9 @@ function isStoredValue<T>(value: unknown): value is StoredValue<T> {
  * ```
  */
 export class DynamicData<T> extends StoredData<StoredValue<T>> {
+	/** all instances in memory */
+	private static readonly instances = new Set<DynamicData<unknown>>();
+
     /** to disallow multiple simultaneous refreshes */
 	private refreshPromise: Promise<RefreshResult<T>> | undefined;
     /** for refreshing */
@@ -101,6 +104,7 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
 			throw new Error(`Invalid ttlMs for dynamic data '${options.key}'`);
 		
 		super(join("cache", `${safeKey(options.key)}.json`), isStoredValue<T>);
+		DynamicData.instances.add(this as DynamicData<unknown>);
 
         // set up an interval to refresh the data in the background if necessary
 		if(options.refreshIntervalMs !== undefined) {
@@ -137,7 +141,10 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
 				return { kind: "unchanged" as const };
 			}
 
-			const value = await this.options.fetch();
+			const value = await this.options.fetch().catch((error) => {
+				console.error(`Dynamic data '${this.options.key}' fetch failed`, error);
+				throw error;
+			});
 			const stored: StoredValue<T> = {
 				value,
 				fetchedAt: Date.now(),
@@ -215,6 +222,12 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
     /** clean up if being destroyed. necessary for data sources with a refresh interval. */
 	destroy(): void {
 		if(this.timer) clearInterval(this.timer);
+		DynamicData.instances.delete(this as DynamicData<unknown>);
+	}
+
+	/** clear every source already created in this process */
+	static async clearInstances(): Promise<void> {
+		await Promise.all([...DynamicData.instances].map((source) => source.delete()));
 	}
 }
 
@@ -252,6 +265,12 @@ export async function garbageCollectDynamicData(): Promise<number> {
 		}
 	}
 	return removed;
+}
+
+/** clear cached dynamic data in memory and on disk */
+export async function clearDynamicDataCache(): Promise<void> {
+	await DynamicData.clearInstances();
+	await rm(join(dataDirectory, "cache"), { recursive: true, force: true });
 }
 
 garbageCollectDynamicData().catch((error) => console.error("Failed to gc dynamic data", error));

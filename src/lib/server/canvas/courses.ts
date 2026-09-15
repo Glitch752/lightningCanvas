@@ -108,15 +108,17 @@ export const plannerItems = new DynamicData<PlannerItem[] | null>({
 	refreshThresholdMs: 1000 * 60 * 10, // likely to change pretty often
 	fetch: async () => {
 		const uid = await userId.get();
-		if(uid === null) return null;
-
+		if(uid === null) {
+			console.error("Planner items fetch attempted with no user ID");
+			return Promise.reject("No user ID");
+		}
 
 		// 7 days ago is arbitrary but meh
 		const startDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString();
 		const data = await canvasFetch<PlannerItem[]>(`/api/v1/planner/items?start_date=${startDate}&order=asc&per_page=30`);
 		if(!data) {
-			console.warn("Canvas planner items fetch returned no data");
-			return null;
+			console.error("Canvas planner items fetch returned no data");
+			return Promise.reject("No data returned from Canvas planner items fetch");
 		}
 		
 		return data.map(v => ({

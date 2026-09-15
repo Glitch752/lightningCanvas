@@ -80,7 +80,11 @@
         font-size: var(--font-xs);
         margin-bottom: 1rem;
     }
-    nav { gap: 0.25rem; }
+    nav {
+        gap: 0.25rem;
+        position: sticky;
+        top: 0rem;
+    }
     nav a {
         padding: 0.4rem 0.5rem;
         border-radius: 0 var(--radius) var(--radius) 0;

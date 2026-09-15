@@ -1,18 +1,40 @@
+<script lang="ts" module>
+    export function getPlannableLink(canvasHostname: string, item: PlannerItem): string {
+        switch(item.plannable_type) {
+            case "assignment":
+                return `/course/${item.course_id}/assignments/${item.plannable_id}`;
+            case "quiz":
+                return `${canvasHostname}/courses/${item.course_id}/quizzes/${item.plannable_id}`;
+            default:
+                return `/course/${item.course_id}`;
+        }
+    }
+    export function isPlannableLinkExternal(item: PlannerItem): boolean {
+        return item.plannable_type === "quiz";
+    }
+</script>
+
 <script lang="ts">
     import { type DynamicDataState } from "$lib/dynamicData.svelte";
     import { Clock, RotateCcwClock } from "@lucide/svelte";
     import { formatRelative } from "$lib/datetime";
     import type { CanvasCourse, PlannerItem } from "$lib/server/canvas/courses";
+    import type { Snippet } from "svelte";
 
-    const { plannerItems, courseItems }: {
+    const { plannerItems, courseItems, canvasHostname }: {
         plannerItems: DynamicDataState<PlannerItem[] | null | undefined>,
-        courseItems: (CanvasCourse & { color: string })[] | null | undefined
+        courseItems: (CanvasCourse & { color: string })[] | null | undefined,
+        canvasHostname: string
     } = $props();
+
+    function plannerItemCompleted(item: PlannerItem): boolean {
+        return item.submissions.submitted || (item.planner_override?.marked_complete ?? false);
+    }
 
     const todoGroupedByDate = $derived.by(() => {
         // TODO: manually dismissing items
-        const items = showCompletedItems ?
-            plannerItems.value : plannerItems.value?.filter(item => !item.submissions.submitted);
+        const items = showCompletedItems ? plannerItems.value :
+            plannerItems.value?.filter(i => !plannerItemCompleted(i));
         if(!items) return null;
 
         const grouped: Record<string, typeof items> = {};
@@ -44,6 +66,22 @@
     </button>
 </h1>
 
+{#snippet plannerItem(classes: string[], item: PlannerItem, content: Snippet)}
+    {@const course = courseItems?.find(c => parseInt(c.id) === item.course_id)}
+    <li class={[...classes, "-card -hover-hl"]} style="--highlight: {course?.color}">
+        <a
+            href={getPlannableLink(canvasHostname, item)}
+            class="-vflex"
+            target={isPlannableLinkExternal(item) ? "_blank" : undefined}
+            rel={isPlannableLinkExternal(item) ? "noreferrer" : undefined}
+        >
+            <span class="course-name">{item.context_name}</span>
+            <span class="plannable-title">{item.plannable.title}</span>
+            {@render content()}
+        </a>
+    </li>
+{/snippet}
+
 {#if plannerItems.value?.length === 0 || !todoGroupedByDate}
     <p class="-empty">No upcoming items.</p>
 {:else}
@@ -60,21 +98,18 @@
         </h2>
         <ul class="planner-items -vflex">
             {#each items as item}
-                {@const course = courseItems?.find(c => parseInt(c.id) === item.course_id)}
                 {@const dueDate = new Date(item.plannable.due_at)}
-                {@const completed = item.submissions.submitted}
-                <li class="-card -hover-hl" style="--highlight: {course?.color}" class:completed={completed}>
-                    <a href={`/course/${item.course_id}/assignments/${item.plannable.id}`} class="-vflex">
-                        <span class="course-name">{item.context_name}</span>
-                        <span class="plannable-title">{item.plannable.title}</span>
-                        {#if !completed}
-                            <span class="due-date">
-                                Due {timeFormatter.format(dueDate)}
-                                <span class:-error={dueDate < new Date()}>({formatRelative(dueDate)})</span>
-                            </span>
-                        {/if}
-                    </a>
-                </li>
+                <!-- TODO: special styles for overridden completion -->
+                {@const completed = plannerItemCompleted(item)}
+                {#snippet content()}
+                    {#if !completed}
+                        <span class="due-date">
+                            Due {timeFormatter.format(dueDate)}
+                            <span class:-error={dueDate < new Date()}>({formatRelative(dueDate)})</span>
+                        </span>
+                    {/if}
+                {/snippet}
+                {@render plannerItem([completed ? "completed" : ""], item, content)}
             {/each}
         </ul>
     {/each}
@@ -86,14 +121,10 @@
     {:else}
         <ul class="planner-items -vflex">
             {#each recentFeedbackItems as item}
-                {@const course = courseItems?.find(c => parseInt(c.id) === item.course_id)}
-                <li class="planner-item completed-feedback -card" style="--highlight: {course?.color}">
-                    <a href={`/course/${item.course_id}/assignments/${item.plannable.id}`} class="-vflex">
-                        <p class="course-name">{item.context_name}</p>
-                        <p class="plannable-title">{item.plannable.title}</p>
-                        <p class="feedback">"{item.submissions.feedback?.comment}"</p>
-                    </a>
-                </li>
+                {#snippet content()}
+                    <span class="feedback">"{item.submissions.feedback?.comment}"</span>
+                {/snippet}
+                {@render plannerItem(["completed-feedback"], item, content)}
             {/each}
         </ul>
     {/if}

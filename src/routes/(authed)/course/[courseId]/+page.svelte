@@ -40,6 +40,7 @@
                 error: courseHome.error
             }}
             courseItems={course ? [{ ...course, color: "var(--primary)" }] : undefined}
+            canvasHostname={data.settings.canvasHostname}
         />
     </aside>
 </div>

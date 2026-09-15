@@ -55,9 +55,13 @@ export type PlannerItem = {
     course_id: number;
     submissions: { submitted: boolean; feedback?: { comment?: string; }; };
     plannable_id: string;
-    plannable_type: "assignment" | string;
+    plannable_type: "assignment" | "quiz" | string;
     plannable_date: string;
     plannable: { id: string; title: string; points_possible: number; due_at: string; };
+	planner_override: {
+		// this type is actually a lot more complicated but for now we'll just care about completion
+		marked_complete: boolean;
+	} | null;
 };
 
 /** dynamic data source for course data */
@@ -106,8 +110,9 @@ export const plannerItems = new DynamicData<PlannerItem[] | null>({
 		const uid = await userId.get();
 		if(uid === null) return null;
 
-		// 5 days ago is arbitrary but meh
-		const startDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString();
+
+		// 7 days ago is arbitrary but meh
+		const startDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString();
 		const data = await canvasFetch<PlannerItem[]>(`/api/v1/planner/items?start_date=${startDate}&order=asc&per_page=30`);
 		if(!data) {
 			console.warn("Canvas planner items fetch returned no data");

@@ -54,7 +54,7 @@
     </div>
     
     <div class="todo -vflex">
-        <TodoList {plannerItems} {courseItems} />
+        <TodoList {plannerItems} {courseItems} canvasHostname={data.settings.canvasHostname} />
     </div>
 </div>
 

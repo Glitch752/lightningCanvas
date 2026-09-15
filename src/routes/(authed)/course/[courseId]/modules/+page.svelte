@@ -29,13 +29,16 @@
 	}
     
 	function itemHref(item: CanvasModuleItem): string | undefined {
+        if(item.type === "SubHeader") return undefined;
 		if(item.type === "Page" && item.page_url) return `/course/${page.params.courseId}/pages/${item.page_url}`;
 		if(item.type === "Assignment" && item.content_id) return `/course/${page.params.courseId}/assignments/${item.content_id}`;
+        if(item.type === "Quiz" && item.content_id) return `${data.settings.canvasHostname}/courses/${page.params.courseId}/quizzes/${item.content_id}`;
+        if(item.type === "Discussion" && item.content_id) return `${data.settings.canvasHostname}/courses/${page.params.courseId}/discussion_topics/${item.content_id}`;
 		return item.external_url ?? item.url;
 	}
 
 	function itemIsExternal(item: CanvasModuleItem): boolean {
-		return Boolean(item.external_url) || item.type === "ExternalUrl" || item.type === "File";
+		return Boolean(item.external_url) || ["ExternalUrl", "File", "Quiz", "Discussion"].includes(item.type);
 	}
     
 	const icons: {
@@ -75,24 +78,35 @@
 							{#each mod.items.toSorted((a, b) => a.position - b.position) as item (item.id)}
 								{@const Icon = icons[item.type as keyof typeof icons] ?? BookOpen}
 								{@const href = itemHref(item)}
-								<a
-                                    class="module-item -hflex -input -flat"
-                                    style={`--indent: ${item.indent ?? 0}`}
-                                    
-                                    href={href}
-                                    data-type={item.type}
-                                    target={itemIsExternal(item) ? "_blank" : undefined}
-                                    rel={itemIsExternal(item) ? "noreferrer" : undefined}
-                                >
-									<span class="item-icon"><Icon /></span>
-									{#if href}
+                                {#if href}
+                                    <a
+                                        class="module-item -hflex -input -flat"
+                                        style={`--indent: ${item.indent ?? 0}`}
+                                        
+                                        href={href}
+                                        data-type={item.type}
+                                        target={itemIsExternal(item) ? "_blank" : undefined}
+                                        rel={itemIsExternal(item) ? "noreferrer" : undefined}
+                                    >
+                                        <span class="item-icon" title={item.type}><Icon /></span>
+                                        {#if href}
+                                            <span class="item-title">{item.title}</span>
+                                        {:else}
+                                            <span class="item-title">{item.title}</span>
+                                        {/if}
+                                        {#if item.completion_requirement?.completed}<Check class="-success" />{/if}
+                                    </a>
+                                {:else}
+                                    <div
+                                        class="module-item -hflex"
+                                        style={`--indent: ${item.indent ?? 0}`}
+                                        data-type={item.type}
+                                    >
                                         <span class="item-title">{item.title}</span>
-									{:else}
-										<span class="item-title">{item.title}</span>
-									{/if}
-									{#if item.completion_requirement?.completed}<Check class="-success" />{/if}
-                                </a>
-							{/each}
+                                        {#if item.completion_requirement?.completed}<Check class="-success" />{/if}
+                                    </div>
+                                {/if}
+                            {/each}
 						</div>
 					{/if}
 				</section>
@@ -172,6 +186,10 @@
         }
         &[data-type="Page"] {
             ---text: var(--text-muted);
+        }
+        &[data-type="SubHeader"] {
+            text-decoration: none;
+            font-weight: bold;
         }
         
         &:not(:first-child) {

@@ -1,5 +1,5 @@
 <script lang="ts" module>
-    export function getPlannableLink(canvasHostname: string, item: PlannerItem): string {
+    export function getPlannerLink(canvasHostname: string, item: PlannerItem): string {
         switch(item.plannable_type) {
             case "assignment":
                 return `/course/${item.course_id}/assignments/${item.plannable_id}`;
@@ -9,8 +9,11 @@
                 return `/course/${item.course_id}`;
         }
     }
-    export function isPlannableLinkExternal(item: PlannerItem): boolean {
+    export function isPlannerLinkExternal(item: PlannerItem): boolean {
         return item.plannable_type === "quiz";
+    }
+    export function plannerItemCompleted(item: PlannerItem): boolean {
+        return item.submissions.submitted || (item.planner_override?.marked_complete ?? false);
     }
 </script>
 
@@ -26,10 +29,6 @@
         courseItems: (CanvasCourse & { color: string })[] | null | undefined,
         canvasHostname: string
     } = $props();
-
-    function plannerItemCompleted(item: PlannerItem): boolean {
-        return item.submissions.submitted || (item.planner_override?.marked_complete ?? false);
-    }
 
     const todoGroupedByDate = $derived.by(() => {
         // TODO: manually dismissing items
@@ -70,10 +69,10 @@
     {@const course = courseItems?.find(c => parseInt(c.id) === item.course_id)}
     <li class={[...classes, "-card -hover-hl"]} style="--highlight: {course?.color}">
         <a
-            href={getPlannableLink(canvasHostname, item)}
+            href={getPlannerLink(canvasHostname, item)}
             class="-vflex"
-            target={isPlannableLinkExternal(item) ? "_blank" : undefined}
-            rel={isPlannableLinkExternal(item) ? "noreferrer" : undefined}
+            target={isPlannerLinkExternal(item) ? "_blank" : undefined}
+            rel={isPlannerLinkExternal(item) ? "noreferrer" : undefined}
         >
             <span class="course-name">{item.context_name}</span>
             <span class="plannable-title">{item.plannable.title}</span>

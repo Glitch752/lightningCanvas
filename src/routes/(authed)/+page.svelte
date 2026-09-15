@@ -2,7 +2,7 @@
     import type { PageData } from "./$types";
     import { pageData } from "../+layout.svelte";
     import { dynamicDataState } from "$lib/dynamicData.svelte";
-    import TodoList from "./TodoList.svelte";
+    import TodoList, { plannerItemCompleted } from "./TodoList.svelte";
     import CourseCard from "./CourseCard.svelte";
 
 	let { data }: { data: PageData } = $props();
@@ -22,7 +22,7 @@
 
     const plannerItemsByCourse = $derived(
         plannerItems.value
-        ?.filter(item => item.context_type === "Course" && item.course_id && !item.submissions.submitted)
+        ?.filter(item => item.context_type === "Course" && item.course_id && !plannerItemCompleted(item))
         ?.reduce((acc, item) => {
             if(!acc[item.course_id]) acc[item.course_id] = [];
             acc[item.course_id].push(item);

@@ -1,13 +1,15 @@
 /** miscellaneous ui-related settings that don't belong to backend logic */
 export type VisualSettings = {
 	useCourseImages: boolean;
+	showBackgroundEffects: boolean;
 };
 
 /** visual settings with labels and defaults */
 export const visualSettings: {
 	[key in keyof VisualSettings]: { label: string, default: VisualSettings[key] }
 } = {
-	useCourseImages: { label: "Show instructor-defined course images", default: true }
+	useCourseImages: { label: "Show instructor-defined course images", default: true },
+	showBackgroundEffects: { label: "Show background effects", default: true }
 }
 
 /** application-wide settings */
@@ -20,9 +22,7 @@ export type Settings = {
 export const defaultSettings: Settings = {
 	canvasHostname: "",
 	canvasApiKey: "",
-	visual: {
-		useCourseImages: true
-	}
+	visual: Object.fromEntries(Object.entries(visualSettings).map(([key, value]) => [key, value.default])) as VisualSettings
 };
 
 /** check if a value is a valid Settings object. */

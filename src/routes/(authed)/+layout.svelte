@@ -5,7 +5,8 @@
 	import type { LayoutData } from "./$types";
     import type { Snippet } from "svelte";
     import { dynamicDataLoading } from "$lib/dynamicData.svelte";
-    import { enhance } from "$app/forms";
+    import BackgroundEffects from "$lib/components/BackgroundEffects.svelte";
+    import { browser } from "$app/env";
   	
 	let { children, data }: { children: Snippet, data: LayoutData } = $props();
 </script>
@@ -17,6 +18,9 @@
 	</nav>
 	<main>
 		{@render children()}
+		{#if data.settings.visual.showBackgroundEffects && browser}
+			<BackgroundEffects />
+		{/if}
 	</main>
 	<footer class="-hflex">
 		{#if $pageDataStore.canvasUrl}
@@ -81,6 +85,7 @@ main {
 	grid-area: main;
 	overflow-y: auto;
     padding: 0.5rem 1rem;
+	position: relative;
 }
 footer {
 	grid-area: footer;

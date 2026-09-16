@@ -2,7 +2,7 @@
     import { ChevronDown, ChevronUp, ListCheck } from "@lucide/svelte";
     import type { PageData } from "./$types";
     import type { CanvasCourse, PlannerItem } from "$lib/server/canvas/courses";
-    import { getPlannerLink } from "./TodoList.svelte";
+    import { getPlannerLink, isPlannerLinkExternal } from "./TodoList.svelte";
 
     const MAX_COURSE_TASKS_DISPLAYED = 5;
 
@@ -58,6 +58,8 @@
             <a
                 class="course-task -input -hflex"
                 href={getPlannerLink(data.settings.canvasHostname, item)}
+                target={isPlannerLinkExternal(item) ? "_blank" : undefined}
+                rel={isPlannerLinkExternal(item) ? "noreferrer" : undefined}
                 title={item.plannable.title}
             >
                 <span class="title">{item.plannable.title}</span>

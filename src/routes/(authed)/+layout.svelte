@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { pageDataStore } from "../+layout.svelte";
     import { page } from "$app/state";
     import { Calendar, Gauge, LoaderCircle, LogOut, Settings } from "@lucide/svelte";
 	import type { LayoutData } from "./$types";
@@ -7,6 +6,7 @@
     import { dynamicDataLoading } from "$lib/dynamicData.svelte";
     import BackgroundEffects from "$lib/components/BackgroundEffects.svelte";
     import { browser } from "$app/env";
+    import { pageDataStore } from "$lib/pageData.svelte";
   	
 	let { children, data }: { children: Snippet, data: LayoutData } = $props();
 </script>

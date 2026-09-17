@@ -4,8 +4,8 @@
     import { dynamicDataState } from "$lib/dynamicData.svelte";
     import TodoList from "../../TodoList.svelte";
     import UserContentViewer from "$lib/components/UserContentViewer.svelte";
-    import { pageData } from "../../../+layout.svelte";
     import { getGlobalCourse } from "./+layout.svelte";
+    import { pageData } from "$lib/pageData.svelte";
 
     let { data }: { data: PageData } = $props();
     const courseHome = dynamicDataState(() => data.courseHome);

@@ -2,8 +2,8 @@
 	import { page as currentPage } from "$app/state";
     import UserContentViewer from "$lib/components/UserContentViewer.svelte";
 	import { dynamicDataState } from "$lib/dynamicData.svelte";
+    import { pageData } from "$lib/pageData.svelte";
 	import type { PageData } from "./$types";
-    import { pageData } from "../../../../../+layout.svelte";
 
 	let { data }: { data: PageData } = $props();
 	const coursePage = dynamicDataState(() => data.page);

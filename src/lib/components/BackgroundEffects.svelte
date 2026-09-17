@@ -60,7 +60,7 @@
             // longer, faster, and subtler streaks for distance
             length: Math.round(20 + depth * 40),
             speed: 100 + depth * 300,
-            opacity: 0.002 + depth * 0.015,
+            opacity: 0.003 + depth * 0.020,
             splash: 0, splashX: 0, splashY: 0
         };
     }

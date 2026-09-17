@@ -14,14 +14,20 @@ export const visualSettings: {
 
 /** application-wide settings */
 export type Settings = {
-	canvasHostname: string;
-	canvasApiKey: string;
+	canvasInstances: {
+		name: string;
+		hostname: string;
+		apiKey: string;
+	}[];
 	visual: VisualSettings;
 };
 
 export const defaultSettings: Settings = {
-	canvasHostname: "",
-	canvasApiKey: "",
+	canvasInstances: [{
+		name: "Default",
+		hostname: "https://canvas.instructure.com",
+		apiKey: ""
+	}],
 	visual: Object.fromEntries(Object.entries(visualSettings).map(([key, value]) => [key, value.default])) as VisualSettings
 };
 

@@ -5,8 +5,8 @@
 	import type { CanvasModuleItem } from "$lib/server/canvas/modules";
 	import type { CanvasModuleItemType } from "$lib/server/canvas/modules";
 	import type { PageData } from "./$types";
-    import { pageData } from "../../../../+layout.svelte";
     import { getGlobalCourse } from "../+layout.svelte";
+    import { pageData } from "$lib/pageData.svelte";
 
 	let { data }: { data: PageData } = $props();
 	

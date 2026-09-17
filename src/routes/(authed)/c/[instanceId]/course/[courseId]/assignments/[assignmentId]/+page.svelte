@@ -3,7 +3,7 @@
 	import { ExternalLink } from "@lucide/svelte";
 	import UserContentViewer from "$lib/components/UserContentViewer.svelte";
 	import type { PageData } from "./$types";
-	import { pageData } from "../../../../../+layout.svelte";
+    import { pageData } from "$lib/pageData.svelte";
 
 	let { data }: { data: PageData } = $props();
 	const assignment = dynamicDataState(() => data.assignment);

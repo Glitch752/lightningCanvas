@@ -2,9 +2,9 @@
     import { page } from "$app/state";
     import { dynamicDataState } from "$lib/dynamicData.svelte";
     import { getGlobalCourse } from "../+layout.svelte";
-	import { pageData } from "../../../../+layout.svelte";
     import type { CanvasGradeAssignment } from "$lib/server/canvas/grades";
     import type { PageData } from "./$types";
+    import { pageData } from "$lib/pageData.svelte";
 
     const { data }: { data: PageData } = $props();
     const grades = dynamicDataState(() => data.grades);

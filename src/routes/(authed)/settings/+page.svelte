@@ -2,9 +2,9 @@
     import { FilePlusCorner } from "@lucide/svelte";
 	import type { ActionData } from "./$types";
 	import type { PageData } from "./$types";
-    import { pageData } from "../../+layout.svelte";
     import { visualSettings, type VisualSettings } from "$lib/settings";
     import { enhance } from "$app/forms";
+    import { pageData } from "$lib/pageData.svelte";
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
     let canvasHostname = $derived(data.settings.canvasHostname);

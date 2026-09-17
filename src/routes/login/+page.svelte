@@ -1,6 +1,6 @@
 <script lang="ts">
     import { enhance } from "$app/forms";
-  	import { pageData } from "../+layout.svelte";
+    import { pageData } from "$lib/pageData.svelte";
 	import type { ActionData } from "./$types";
 
 	let { form }: { form: ActionData } = $props();

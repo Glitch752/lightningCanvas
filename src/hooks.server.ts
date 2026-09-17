@@ -1,5 +1,11 @@
-import { redirect, type Handle } from "@sveltejs/kit";
+import { redirect, type Handle, type ServerInit } from "@sveltejs/kit";
 import { cookieName, createSessionCookie, isAuthenticated } from "$lib/server/auth";
+import { applyNewMigrations } from "$lib/server/migrations";
+
+// migrations
+export const init: ServerInit = async () => {
+	await applyNewMigrations();
+};
 
 // handle simple auth
 export const handle: Handle = ({ event, resolve }) => {

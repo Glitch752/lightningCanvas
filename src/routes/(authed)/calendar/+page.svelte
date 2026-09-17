@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { pageData } from "../../+layout.svelte";
+    import { pageData } from "$lib/pageData.svelte";
 
 	pageData(() => ({
 		title: "Calendar",

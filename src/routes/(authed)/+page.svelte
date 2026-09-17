@@ -1,9 +1,9 @@
 <script lang="ts">
     import type { PageData } from "./$types";
-    import { pageData } from "../+layout.svelte";
     import { dynamicDataState } from "$lib/dynamicData.svelte";
     import TodoList, { plannerItemCompleted } from "./TodoList.svelte";
     import CourseCard from "./CourseCard.svelte";
+    import { pageData } from "$lib/pageData.svelte";
 
 	let { data }: { data: PageData } = $props();
 

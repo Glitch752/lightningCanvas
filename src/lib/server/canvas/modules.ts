@@ -25,14 +25,16 @@ export type CanvasModule = {
 };
 
 /** dynamic data for course modules */
-export const courseModulesDataRegistry = new DynamicDataRegistry<string, CanvasCourseModules>((courseId) => new DynamicData<CanvasCourseModules>({
-	key: `courses/${courseId}/modules`,
+export const courseModulesDataRegistry = new DynamicDataRegistry<[instanceId: string, courseId: string], CanvasCourseModules>(([instanceId, courseId]) => new DynamicData<CanvasCourseModules>({
+	key: `instances/${instanceId}/courses/${courseId}/modules`,
     ttlMs: 1000 * 60 * 60 * 24 * 30,
-    requireInitialFetch: true,
+    requireInitialFetch: false,
 	refreshThresholdMs: 1000 * 60 * 15,
     refreshIntervalMs: 1000 * 60 * 60 * 24,
 	fetch: async () => {
-		const modules = await canvasFetch<CanvasModule[]>(`/api/v1/courses/${encodeURIComponent(courseId)}/modules?include[]=items&per_page=500`);
+		const modules = await canvasFetch<CanvasModule[]>(
+            instanceId, `/api/v1/courses/${encodeURIComponent(courseId)}/modules?include[]=items&per_page=500`
+        );
 		return { modules: (modules ?? []).toSorted((a, b) => a.position - b.position) };
 	}
 }));

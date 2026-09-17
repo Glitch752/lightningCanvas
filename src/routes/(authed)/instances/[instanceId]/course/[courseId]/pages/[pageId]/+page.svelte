@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page as currentPage } from "$app/state";
     import UserContentViewer from "$lib/components/UserContentViewer.svelte";
+    import { getInstanceContext } from "$lib/context/instance";
 	import { dynamicDataState } from "$lib/dynamicData.svelte";
     import { pageData } from "$lib/pageData.svelte";
 	import type { PageData } from "./$types";
@@ -10,9 +11,10 @@
 
 	const pageId = $derived(currentPage.params.pageId);
 
+    const instance = getInstanceContext().instance;
     pageData(() => ({
         title: coursePage.value?.page?.title ?? pageId ?? "",
-        canvasUrl: `${data.settings.canvasHostname}/courses/${currentPage.params.courseId}/pages/${pageId}`
+        canvasUrl: `${instance.hostname}/courses/${currentPage.params.courseId}/pages/${pageId}`
     }));
 </script>
 

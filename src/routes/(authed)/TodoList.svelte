@@ -1,33 +1,39 @@
 <script lang="ts" module>
-    export function getPlannerLink(canvasHostname: string, item: PlannerItem): string {
-        switch(item.plannable_type) {
+    export function getPlannerLink(instances: CanvasInstance[], item: CanvasPlannerItem): string {
+        const instance = instances.find(i => i.id === item.instanceId);
+        if(!instance) return `/instances/${item.instanceId}/course/${item.courseId}`;
+        const canvasHostname = instance.hostname;
+        
+        switch(item.plannableType) {
             case "assignment":
-                return `/course/${item.course_id}/assignments/${item.plannable_id}`;
+                return `/instances/${item.instanceId}/course/${item.courseId}/assignments/${item.plannableId}`;
             case "quiz":
-                return `${canvasHostname}/courses/${item.course_id}/quizzes/${item.plannable_id}`;
+                return `${canvasHostname}/courses/${item.courseId}/quizzes/${item.plannableId}`;
             default:
-                return `/course/${item.course_id}`;
+                return `/instances/${item.instanceId}/course/${item.courseId}`;
         }
     }
-    export function isPlannerLinkExternal(item: PlannerItem): boolean {
-        return item.plannable_type === "quiz";
+    export function isPlannerLinkExternal(item: CanvasPlannerItem): boolean {
+        return item.plannableType === "quiz";
     }
-    export function plannerItemCompleted(item: PlannerItem): boolean {
-        return item.submissions.submitted || (item.planner_override?.marked_complete ?? false);
+    export function plannerItemCompleted(item: CanvasPlannerItem): boolean {
+        return item.submissions?.submitted || (item.plannerOverride?.markedComplete ?? false);
     }
 </script>
 
 <script lang="ts">
     import { type DynamicDataState } from "$lib/dynamicData.svelte";
-    import { Clock, RotateCcwClock } from "@lucide/svelte";
+	import Clock from "@lucide/svelte/icons/clock";
+	import RotateCcwClock from "@lucide/svelte/icons/rotate-ccw-clock";
     import { formatRelative } from "$lib/datetime";
-    import type { CanvasCourse, PlannerItem } from "$lib/server/canvas/courses";
+    import type { CanvasCourse, CanvasPlannerItem } from "$lib/server/canvas/courses";
     import type { Snippet } from "svelte";
+    import type { CanvasInstance } from "$lib/settings";
 
-    const { plannerItems, courseItems, canvasHostname }: {
-        plannerItems: DynamicDataState<PlannerItem[] | null | undefined>,
+    const { plannerItems, courseItems, instances }: {
+        plannerItems: DynamicDataState<CanvasPlannerItem[] | null | undefined>,
         courseItems: (CanvasCourse & { color: string })[] | null | undefined,
-        canvasHostname: string
+        instances: CanvasInstance[]
     } = $props();
 
     const todoGroupedByDate = $derived.by(() => {
@@ -38,7 +44,7 @@
 
         const grouped: Record<string, typeof items> = {};
         for(const item of items) {
-            const date = new Date(item.plannable.due_at).toDateString();
+            const date = new Date(item.plannable.dueAt).toDateString();
             if(!grouped[date]) grouped[date] = [];
             grouped[date].push(item);
         }
@@ -46,10 +52,10 @@
     });
 
     const recentFeedbackItems = $derived(plannerItems.value
-        ?.filter(item => item.submissions.feedback?.comment)
+        ?.filter(item => item.submissions?.feedback?.comment)
         .sort((a, b) => {
-            const aDate = new Date(a.submissions.feedback?.comment ? a.plannable.due_at : 0);
-            const bDate = new Date(b.submissions.feedback?.comment ? b.plannable.due_at : 0);
+            const aDate = new Date(a.submissions?.feedback?.comment ? a.plannable.dueAt : 0);
+            const bDate = new Date(b.submissions?.feedback?.comment ? b.plannable.dueAt : 0);
             return bDate.getTime() - aDate.getTime();
         }));
 
@@ -65,16 +71,16 @@
     </button>
 </h1>
 
-{#snippet plannerItem(classes: string[], item: PlannerItem, content: Snippet)}
-    {@const course = courseItems?.find(c => parseInt(c.id) === item.course_id)}
+{#snippet plannerItem(classes: string[], item: CanvasPlannerItem, content: Snippet)}
+    {@const course = courseItems?.find(c => parseInt(c.id) === item.courseId)}
     <li class={[...classes, "-card -hover-hl"]} style="--highlight: {course?.color}">
         <a
-            href={getPlannerLink(canvasHostname, item)}
+            href={getPlannerLink(instances, item)}
             class="-vflex"
             target={isPlannerLinkExternal(item) ? "_blank" : undefined}
             rel={isPlannerLinkExternal(item) ? "noreferrer" : undefined}
         >
-            <span class="course-name">{item.context_name}</span>
+            <span class="course-name">{course?.displayedName}</span>
             <span class="plannable-title">{item.plannable.title}</span>
             {@render content()}
         </a>
@@ -87,7 +93,7 @@
     {@const timeFormatter = new Intl.DateTimeFormat([], { month: "numeric", day: "numeric", hour: "numeric", minute: "numeric" })}
     {@const dateFormatter = new Intl.DateTimeFormat([], { weekday: "short", month: "short", day: "numeric" })}
     {#each Object.entries(todoGroupedByDate) as [date, items]}
-        {@const hasIncompleteItems = items.some(item => !item.submissions.submitted)}
+        {@const hasIncompleteItems = items.some(item => !item.submissions?.submitted)}
         <h2 class="time-header -hflex" class:completed={!hasIncompleteItems}>
             {dateFormatter.format(new Date(date))}
             <!-- if before today, show a little overdue icon -->
@@ -97,7 +103,7 @@
         </h2>
         <ul class="planner-items -vflex">
             {#each items as item}
-                {@const dueDate = new Date(item.plannable.due_at)}
+                {@const dueDate = new Date(item.plannable.dueAt)}
                 <!-- TODO: special styles for overridden completion -->
                 {@const completed = plannerItemCompleted(item)}
                 {#snippet content()}
@@ -121,7 +127,7 @@
         <ul class="planner-items -vflex">
             {#each recentFeedbackItems as item}
                 {#snippet content()}
-                    <span class="feedback">"{item.submissions.feedback?.comment}"</span>
+                    <span class="feedback">"{item.submissions?.feedback?.comment}"</span>
                 {/snippet}
                 {@render plannerItem(["completed-feedback"], item, content)}
             {/each}

@@ -1,14 +1,26 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { dynamicDataState } from "$lib/dynamicData.svelte";
-	import { BookOpen, Check, ChevronDown, ChevronRight, CircleQuestionMark, ClipboardList, ExternalLink, FileText, MessageSquare, Paperclip, Pencil } from "@lucide/svelte";
+	import BookOpen from "@lucide/svelte/icons/book-open";
+	import Check from "@lucide/svelte/icons/check";
+	import ChevronDown from "@lucide/svelte/icons/chevron-down";
+	import ChevronRight from "@lucide/svelte/icons/chevron-right";
+	import CircleQuestionMark from "@lucide/svelte/icons/circle-question-mark";
+	import ClipboardList from "@lucide/svelte/icons/clipboard-list";
+	import ExternalLink from "@lucide/svelte/icons/external-link";
+	import FileText from "@lucide/svelte/icons/file-text";
+	import MessageSquare from "@lucide/svelte/icons/message-square";
+	import Paperclip from "@lucide/svelte/icons/paperclip";
+	import Pencil from "@lucide/svelte/icons/pencil";
 	import type { CanvasModuleItem } from "$lib/server/canvas/modules";
 	import type { CanvasModuleItemType } from "$lib/server/canvas/modules";
 	import type { PageData } from "./$types";
     import { getGlobalCourse } from "../+layout.svelte";
     import { pageData } from "$lib/pageData.svelte";
+    import { getInstanceContext } from "$lib/context/instance";
 
 	let { data }: { data: PageData } = $props();
+    const instance = getInstanceContext().instance;
 	
     const modules = dynamicDataState(() => data.modules);
 
@@ -16,7 +28,7 @@
     const course = $derived(globalCourse.value?.course);
     pageData(() => ({
         title: `${course?.displayedName ?? course?.fullName ?? "Unknown course"} - Modules`,
-        canvasUrl: `${data.settings.canvasHostname}/courses/${page.params.courseId}/modules`
+        canvasUrl: `${instance.hostname}/courses/${page.params.courseId}/modules`
     }));
 	
     // TODO: persist collapsed state, ideally on the server but maybe just in local storage
@@ -27,13 +39,13 @@
 		else next.add(moduleId);
 		expanded = next;
 	}
-    
+
 	function itemHref(item: CanvasModuleItem): string | undefined {
         if(item.type === "SubHeader") return undefined;
-		if(item.type === "Page" && item.page_url) return `/course/${page.params.courseId}/pages/${item.page_url}`;
-		if(item.type === "Assignment" && item.content_id) return `/course/${page.params.courseId}/assignments/${item.content_id}`;
-        if(item.type === "Quiz" && item.content_id) return `${data.settings.canvasHostname}/courses/${page.params.courseId}/quizzes/${item.content_id}`;
-        if(item.type === "Discussion" && item.content_id) return `${data.settings.canvasHostname}/courses/${page.params.courseId}/discussion_topics/${item.content_id}`;
+		if(item.type === "Page" && item.page_url) return `/instances/${page.params.instanceId}/course/${page.params.courseId}/pages/${item.page_url}`;
+		if(item.type === "Assignment" && item.content_id) return `/instances/${page.params.instanceId}/course/${page.params.courseId}/assignments/${item.content_id}`;
+        if(item.type === "Quiz" && item.content_id) return `${instance.hostname}/courses/${page.params.courseId}/quizzes/${item.content_id}`;
+        if(item.type === "Discussion" && item.content_id) return `${instance.hostname}/courses/${page.params.courseId}/discussion_topics/${item.content_id}`;
 		return item.external_url ?? item.url;
 	}
 

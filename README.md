@@ -31,7 +31,7 @@ Doesn't replicate the entire (or even a large fraction of) Canvas functionality,
 - [ ] simple multi-user support (without signup or anything) and shared course caching
 
 ## Development notes
-- We use [Lucide icons](https://lucide.dev/) for icons, but Vite tree-shaking the whole "export barrel"(?) under the root is _very_ slow and messes with the TS server. Instead, we _should_ import individual icons like `import Check from "@lucide/svelte/icons/check"`. The TS server doesn't do this itself, though, so... I just occasionally go through and fix it. Maybe we should look into a vite plugin or something to do this.
+- We use [Lucide icons](https://lucide.dev/) for icons, but Vite tree-shaking the whole "export barrel"(?) under the root is _very_ slow and messes with the TS server. Instead, we _should_ import individual icons like `import Check from "@lucide/svelte/icons/check"`. The TS server doesn't do this itself, though, so... I just occasionally go through and fix it with `pnpm run fix-lucide`.
 - We put `lang="scss"` on the `<style>` tag in Svelte files, but we don't actually use any SCSS features or a preprocessor. It fixes VSCode's syntax highlighting for CSS nesting...
 - There's a .prettierrc in the root, but I don't actually use Prettier... it's to fix the Svelte VSCode extension's automatic indent in a few places.
 - Conventions: 4 indents, double quotes, semicolons, no space before for/if/while parentheses

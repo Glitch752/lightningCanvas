@@ -12,7 +12,8 @@ export class MultiInstanceMigration extends Migration {
                 {
                     name: "Default",
                     hostname: canvasHostname,
-                    apiKey: canvasApiKey
+                    apiKey: canvasApiKey,
+                    id: new URL(canvasHostname).hostname.split(".")[0] || "canvas"
                 }
             ],
             ...settings,

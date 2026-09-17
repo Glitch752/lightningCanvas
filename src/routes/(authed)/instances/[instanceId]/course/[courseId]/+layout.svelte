@@ -8,8 +8,10 @@
     import { dynamicDataState, type DynamicDataState } from "$lib/dynamicData.svelte";
     import type { CanvasCourseGlobal } from "$lib/server/canvas/courses";
     import { createContext, type Snippet } from "svelte";
+    import { getInstanceContext } from "$lib/context/instance";
 
     let { children, data }: { children: Snippet; data: LayoutData } = $props();
+    const instance = getInstanceContext().instance;
 
     const courseGlobal = dynamicDataState(() => data.courseGlobal);
     const courseId = $derived(page.params.courseId);
@@ -27,12 +29,12 @@
 
     function makeAbsolute(url: string): string {
         if(url.startsWith("http")) return url;
-        if(data.settings.canvasHostname) return `${data.settings.canvasHostname}${url}`;
+        if(instance.hostname) return `${instance.hostname}${url}`;
         return url;
     }
 
     function localTabHref(tabId: string): string {
-        return `/course/${courseId}${localTabPaths[tabId]}`;
+        return `/instances/${instance.id}/course/${courseId}${localTabPaths[tabId]}`;
     }
 </script>
 
@@ -46,7 +48,7 @@
             {#each internalTabs as tab}
                 <a
                     href={localTabHref(tab.id)}
-                    class:active={page.route.id === `/(authed)/course/[courseId]${localTabPaths[tab.id]}`}
+                    class:active={page.route.id === `/(authed)/instances/[instanceId]/course/[courseId]${localTabPaths[tab.id]}`}
                 >{tab.label}</a>
             {/each}
             {#each externalTabs as tab}

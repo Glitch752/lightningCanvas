@@ -32,26 +32,28 @@ export type CanvasGrades = {
 };
 
 /** dynamic data for the grades and assignment groups */
-export const courseGradesDataRegistry = new DynamicDataRegistry<string, CanvasGrades>((courseId) => new DynamicData<CanvasGrades>({
-	key: `courses/${courseId}/grades`,
-	ttlMs: 1000 * 60 * 60 * 24 * 30,
-	requireInitialFetch: true,
-	refreshThresholdMs: 1000 * 60 * 15,
-	refreshIntervalMs: 1000 * 60 * 60 * 6,
-	fetch: async () => {
-		const [enrollments, groups] = await Promise.all([
-			canvasFetch<Array<{ type: string; grades?: { current_grade: string | null; current_score: number | null } }>>(
-				`/api/v1/courses/${encodeURIComponent(courseId)}/enrollments?user_id=self&type[]=StudentEnrollment&include[]=grades`
-			),
-			canvasFetch<CanvasAssignmentGroup[]>(
-				`/api/v1/courses/${encodeURIComponent(courseId)}/assignment_groups?include[]=assignments&include[]=submission&per_page=500`
-			)
-		]);
-		const enrollment = enrollments?.find((item) => item.type === "StudentEnrollment");
-		return {
-			currentGrade: enrollment?.grades?.current_grade ?? null,
-			currentScore: enrollment?.grades?.current_score ?? null,
-			groups: groups ?? []
-		};
-	}
-}));
+export const courseGradesDataRegistry = new DynamicDataRegistry<[instanceId: string, courseId: string], CanvasGrades>(
+	([instanceId, courseId]) => new DynamicData<CanvasGrades>({
+		key: `instances/${instanceId}/courses/${courseId}/grades`,
+		ttlMs: 1000 * 60 * 60 * 24 * 30,
+		requireInitialFetch: false,
+		refreshThresholdMs: 1000 * 60 * 15,
+		refreshIntervalMs: 1000 * 60 * 60 * 6,
+		fetch: async () => {
+			const [enrollments, groups] = await Promise.all([
+				canvasFetch<Array<{ type: string; grades?: { current_grade: string | null; current_score: number | null } }>>(
+					instanceId, `/api/v1/courses/${encodeURIComponent(courseId)}/enrollments?user_id=self&type[]=StudentEnrollment&include[]=grades`
+				),
+				canvasFetch<CanvasAssignmentGroup[]>(
+					instanceId, `/api/v1/courses/${encodeURIComponent(courseId)}/assignment_groups?include[]=assignments&include[]=submission&per_page=500`
+				)
+			]);
+			const enrollment = enrollments?.find((item) => item.type === "StudentEnrollment");
+			return {
+				currentGrade: enrollment?.grades?.current_grade ?? null,
+				currentScore: enrollment?.grades?.current_score ?? null,
+				groups: groups ?? []
+			};
+		}
+	})
+);

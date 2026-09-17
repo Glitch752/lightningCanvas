@@ -6,10 +6,11 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"check": "svelte-check --no-tsconfig --ignore node_modules",
+		"check": "svelte-check --tsconfig ./tsconfig.json",
 		"deploy": "sh scripts/deploy.sh",
 		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''"
+		"prepare": "svelte-kit sync || echo ''",
+		"fix-lucide": "sh scripts/fix-lucide.sh"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.1",

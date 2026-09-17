@@ -1,7 +1,9 @@
 <script lang="ts">
-    import { ChevronDown, ChevronUp, ListCheck } from "@lucide/svelte";
+	import ChevronDown from "@lucide/svelte/icons/chevron-down";
+	import ChevronUp from "@lucide/svelte/icons/chevron-up";
+	import ListCheck from "@lucide/svelte/icons/list-check";
     import type { PageData } from "./$types";
-    import type { CanvasCourse, PlannerItem } from "$lib/server/canvas/courses";
+    import type { CanvasCourse, CanvasPlannerItem } from "$lib/server/canvas/courses";
     import { getPlannerLink, isPlannerLinkExternal } from "./TodoList.svelte";
 
     const MAX_COURSE_TASKS_DISPLAYED = 5;
@@ -17,7 +19,7 @@
         course, i, plannerItemsForCourse, data
     }: {
         course: CanvasCourse & { color: string }, i: number,
-        plannerItemsForCourse: PlannerItem[],
+        plannerItemsForCourse: CanvasPlannerItem[],
         data: PageData
     } = $props();
     const cid = $derived(parseInt(course.id));
@@ -26,19 +28,19 @@
 </script>
 
 <div class="course -card -hover-hl -vflex" style="--highlight: {course.color}">
-    <a href={`/course/${course.id}`}>
+    <a href={`/instances/${course.instanceId}/course/${course.id}`}>
         <img src={
             (data.settings.visual.useCourseImages ? course.imageUrl : null) ??
             courseImages[i % courseImages.length]
         } alt="" loading="lazy" />
     </a>
-    <a href={`/course/${course.id}/grades`} class="course-grade -vflex">
+    <a href={`/instances/${course.instanceId}/course/${course.id}/grades`} class="course-grade -vflex">
         <span class="grade -card">{course.grade.currentGrade ?? "n/a"}</span>
         {#if course.grade.currentScore}
             <span class="score -card">{course.grade.currentScore}%</span>
         {/if}
     </a>
-    <a href={`/course/${course.id}`} class="course-info">
+    <a href={`/instances/${course.instanceId}/course/${course.id}`} class="course-info">
         <span class="course-name" title={course.fullName}>{course.displayedName}</span>
         {#if course.courseCode}
             <span class="course-code" title={course.courseCode}>{course.courseCode}</span>
@@ -54,10 +56,10 @@
         
         {@const maxDisplayed = expanded ? plannerItemsForCourse.length : MAX_COURSE_TASKS_DISPLAYED}
         {#each plannerItemsForCourse.slice(0, maxDisplayed) as item}
-            {@const dueAtDate = new Date(item.plannable.due_at)}
+            {@const dueAtDate = new Date(item.plannable.dueAt)}
             <a
                 class="course-task -input -hflex"
-                href={getPlannerLink(data.settings.canvasHostname, item)}
+                href={getPlannerLink(data.settings.canvasInstances, item)}
                 target={isPlannerLinkExternal(item) ? "_blank" : undefined}
                 rel={isPlannerLinkExternal(item) ? "noreferrer" : undefined}
                 title={item.plannable.title}

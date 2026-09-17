@@ -76,6 +76,8 @@ type ImmutableFetchedDataOptions<T, Key> = {
  * used for data tied to other information like user ids (to tokens).
  */
 export class ImmutableFetchedData<T, Key> extends StoredData<{ value: T, key: Key }> {
+    private updating: Promise<T | null> | null = null;
+
     constructor(private readonly options: ImmutableFetchedDataOptions<T, Key>) {
         super(options.path, (value: unknown): value is { value: T, key: Key } => {
             if(typeof value !== "object" || value === null) return false;
@@ -86,25 +88,46 @@ export class ImmutableFetchedData<T, Key> extends StoredData<{ value: T, key: Ke
 
     /** re-fetch if the key has changed, returning the value at the end. */
     public async update(): Promise<T | null> {
-        const currentKey = await this.options.key();
-        const stored = await this.read();
+        if(this.updating) {
+            return await this.updating;
+        }
 
-        const jsonCompare = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
-        if(stored && (this.options.equals ?? jsonCompare)(stored.key, currentKey)) return stored.value;
+        this.updating = new Promise<T | null>(async (resolve) => {
+            const currentKey = await this.options.key();
+            const stored = await this.read();
 
-        const fetched = await this.options.fetch(currentKey)
-            ?.catch((error) => {
-                console.error(`Failed to fetch data for key ${currentKey}`, error);
-                return null;
-            });
-        if(!fetched) return null;
+            const jsonCompare = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+            if(stored && (this.options.equals ?? jsonCompare)(stored.key, currentKey)) {
+                resolve(stored.value);
+                return;
+            }
 
-        await this.write({ value: fetched, key: currentKey });
-        return fetched;
+            const fetched = await this.options.fetch(currentKey)
+                ?.catch((error) => {
+                    console.error(`Failed to fetch data for key ${currentKey}`, error);
+                    return null;
+                });
+            if(!fetched) {
+                resolve(null);
+                return;
+            }
+
+            await this.write({ value: fetched, key: currentKey });
+            resolve(fetched);
+        }).finally(() => {
+            this.updating = null;
+        });
+
+        return await this.updating;
     }
 
     /** get the current value, fetching it if necessary */
     public async get(): Promise<T | null> {
-        return this.update();
+        try {
+            return await this.update();
+        } catch (error) {
+            console.error(`Failed to get data for immutable data key ${await this.options.key()}`, error);
+            return null;
+        }
     }
 }

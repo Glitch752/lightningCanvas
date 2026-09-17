@@ -2,12 +2,15 @@
     import { page } from "$app/state";
     import type { PageData } from "./$types";
     import { dynamicDataState } from "$lib/dynamicData.svelte";
-    import TodoList from "../../TodoList.svelte";
     import UserContentViewer from "$lib/components/UserContentViewer.svelte";
     import { getGlobalCourse } from "./+layout.svelte";
     import { pageData } from "$lib/pageData.svelte";
+    import { getInstanceContext } from "$lib/context/instance";
+    import TodoList from "../../../../TodoList.svelte";
 
     let { data }: { data: PageData } = $props();
+    const instance = getInstanceContext().instance;
+
     const courseHome = dynamicDataState(() => data.courseHome);
     const courseId = $derived(page.params.courseId);
 
@@ -15,7 +18,7 @@
     const course = $derived(globalCourse.value?.course);
     pageData(() => ({
         title: course?.displayedName ?? course?.fullName ?? `Course ${courseId}`,
-        canvasUrl: course ? `${data.settings.canvasHostname}/courses/${course.id}` : null
+        canvasUrl: course ? `${instance.hostname}/courses/${course.id}` : null
     }));
 </script>
 
@@ -40,7 +43,7 @@
                 error: courseHome.error
             }}
             courseItems={course ? [{ ...course, color: "var(--primary)" }] : undefined}
-            canvasHostname={data.settings.canvasHostname}
+            instances={[instance]}
         />
     </aside>
 </div>

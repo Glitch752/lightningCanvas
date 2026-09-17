@@ -1,6 +1,10 @@
 <script lang="ts">
     import { page } from "$app/state";
-    import { Calendar, Gauge, LoaderCircle, LogOut, Settings } from "@lucide/svelte";
+	import Calendar from "@lucide/svelte/icons/calendar";
+	import Gauge from "@lucide/svelte/icons/gauge";
+	import LoaderCircle from "@lucide/svelte/icons/loader-circle";
+	import LogOut from "@lucide/svelte/icons/log-out";
+	import Settings from "@lucide/svelte/icons/settings";
 	import type { LayoutData } from "./$types";
     import type { Snippet } from "svelte";
     import { dynamicDataLoading } from "$lib/dynamicData.svelte";

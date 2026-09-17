@@ -12,13 +12,16 @@ export const visualSettings: {
 	showBackgroundEffects: { label: "Show background effects", default: true }
 }
 
+export type CanvasInstance = {
+	name: string;
+	hostname: string;
+	apiKey: string;
+	id: string;
+};
+
 /** application-wide settings */
 export type Settings = {
-	canvasInstances: {
-		name: string;
-		hostname: string;
-		apiKey: string;
-	}[];
+	canvasInstances: CanvasInstance[];
 	visual: VisualSettings;
 };
 
@@ -26,7 +29,8 @@ export const defaultSettings: Settings = {
 	canvasInstances: [{
 		name: "Default",
 		hostname: "https://canvas.instructure.com",
-		apiKey: ""
+		apiKey: "",
+		id: "canvas"
 	}],
 	visual: Object.fromEntries(Object.entries(visualSettings).map(([key, value]) => [key, value.default])) as VisualSettings
 };
@@ -36,7 +40,12 @@ export function isSettings(value: unknown): value is Settings {
 	if(typeof value !== "object" || value === null) return false;
 
 	const settings = value as Record<string, unknown>;
-	if(typeof settings.canvasHostname !== "string" || typeof settings.canvasApiKey !== "string") return false;
+	if(typeof settings.canvasInstances !== "object" || settings.canvasInstances === null) return false;
+	if(!Array.isArray(settings.canvasInstances)) return false;
+	for(const instance of settings.canvasInstances) {
+		if(typeof instance !== "object" || instance === null) return false;
+		if(typeof instance.name !== "string" || typeof instance.hostname !== "string" || typeof instance.apiKey !== "string" || typeof instance.id !== "string") return false;
+	}
 	if(settings.visual === undefined) return true;
 	if(typeof settings.visual !== "object" || settings.visual === null) return false;
 

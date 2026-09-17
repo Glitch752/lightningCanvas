@@ -41,18 +41,18 @@ export type CanvasSubmission = {
 };
 
 /** dynamic data for an individual assignment in a course */
-export const courseAssignmentDataRegistry = new DynamicDataRegistry<string, CanvasAssignment | null>((key) => {
-    const separator = key.indexOf("/");
-    const courseId = key.slice(0, separator);
-    const assignmentId = key.slice(separator + 1);
-
-    return new DynamicData<CanvasAssignment | null>({
-        key: `courses/${courseId}/assignments/${assignmentId}`,
-        ttlMs: 1000 * 60 * 60 * 24 * 30,
-        requireInitialFetch: true,
-        refreshThresholdMs: 1000 * 60 * 15,
-        fetch: () => canvasFetch<CanvasAssignment>(
-            `/api/v1/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}?include[]=submission&include[]=submission_comments`
-        )
-    });
-});
+export const courseAssignmentDataRegistry = new DynamicDataRegistry<[
+    instanceId: string, courseId: string, assignmentId: string
+], CanvasAssignment | null>(
+    ([instanceId, courseId, assignmentId]) => {
+        return new DynamicData<CanvasAssignment | null>({
+            key: `instances/${instanceId}/courses/${courseId}/assignments/${assignmentId}`,
+            ttlMs: 1000 * 60 * 60 * 24 * 30,
+            requireInitialFetch: true,
+            refreshThresholdMs: 1000 * 60 * 15,
+            fetch: () => canvasFetch<CanvasAssignment>(
+                instanceId, `/api/v1/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(assignmentId)}?include[]=submission&include[]=submission_comments`
+            )
+        });
+    }
+);

@@ -6,42 +6,63 @@ function stripGQLWhitespace(query: string): string {
 }
 
 /** fetch data from the Canvas API */
-export async function canvasFetch<T>(path: string, headers: Record<string, string> = {}): Promise<T | null> {
+export async function canvasFetch<T>(instanceId: string, path: string, headers: Record<string, string> = {}): Promise<T | null> {
     const settings = await getSettings();
-    if(!settings.canvasHostname || !settings.canvasApiKey) return null;
+	const instance = settings.canvasInstances.find(i => i.id === instanceId);
+	if(!instance || !instance.hostname || !instance.apiKey) return null;
 
-	console.log("fetching Canvas data", path);
-	let time = Date.now();
-    const response = await fetch(`${settings.canvasHostname}${path}`, {
-        headers: { Authorization: `Bearer ${settings.canvasApiKey}`, ...headers }
+	console.log(`fetching Canvas data from instance ${instanceId}: ${path}`);
+	const time = Date.now();
+	
+    const response = await fetch(`${instance.hostname}${path}`, {
+        headers: { Authorization: `Bearer ${instance.apiKey}`, ...headers }
     });
-	console.log(`Canvas fetch ${path} took ${Date.now() - time}ms`);
+	console.log(`Canvas fetch ${instanceId}: ${path} took ${Date.now() - time}ms`);
 
-    if(!response.ok) throw new Error(`Canvas request failed (${response.status})`);
+    if(!response.ok) {
+		console.error(`Canvas request failed (${response.status}): ${await response.text()}`);
+		throw new Error(`Canvas request failed (${response.status})`);
+	}
     return await response.json() as T;
 }
-export async function canvasGraphqlFetch<T>(query: string, variables: Record<string, unknown> = {}): Promise<T | null> {
+export async function canvasGraphqlFetch<T>(instanceId: string, query: string, variables: Record<string, unknown> = {}): Promise<T | null> {
 	const settings = await getSettings();
-	if(!settings.canvasHostname || !settings.canvasApiKey) return null;
+	const instance = settings.canvasInstances.find(i => i.id === instanceId);
+	if(!instance || !instance.hostname || !instance.apiKey) return null;
 
-	const response = await fetch(`${settings.canvasHostname}/api/graphql`, {
+	console.log(`fetching Canvas GraphQL data from instance ${instanceId}`);
+	const time = Date.now();
+
+	const response = await fetch(`${instance.hostname}/api/graphql`, {
 		method: "POST",
 		body: JSON.stringify({ query: stripGQLWhitespace(query), variables }),
-		headers: { Authorization: `Bearer ${settings.canvasApiKey}`, "Content-Type": "application/json" }
+		headers: { Authorization: `Bearer ${instance.apiKey}`, "Content-Type": "application/json" }
 	});
+	console.log(`Canvas GraphQL fetch ${instanceId} took ${Date.now() - time}ms`);
 
 	if(!response.ok) throw new Error(`Canvas GraphQL request failed (${response.status})`);
-	return await response.json() as T;
+	const json = await response.json() as T;
+
+	if(typeof json === "object" && json !== null && "errors" in json) {
+		console.error("Canvas GraphQL errors:", json.errors);
+		throw new Error("Canvas GraphQL request failed");
+	}
+
+	return json;
 }
 
 /** data source for the user's id */
-export const userId = new ImmutableFetchedData<number | null, string>({
+export const userId = new ImmutableFetchedData<{ [id: string]: number | null }, string[]>({
 	path: "canvas-user-id.json",
 	fetch: async (key) => {
 		if(!key) return null;
 		
-		const user = await canvasFetch<{ id: number }>("/api/v1/users/self");
-		return user?.id ?? null;
+		const userIds = await Promise.all(key.map(async (instanceId) => {
+			const user = await canvasFetch<{ id: number }>(instanceId, "/api/v1/users/self");
+			return [instanceId, user?.id ?? null];
+		}));
+
+		return Object.fromEntries(userIds);
 	},
-	key: () => getSettings().then((settings) => settings.canvasApiKey ?? "")
+	key: () => getSettings().then((settings) => settings.canvasInstances.map(i => i.id))
 });

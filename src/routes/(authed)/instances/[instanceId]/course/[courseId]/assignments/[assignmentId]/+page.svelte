@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { dynamicDataState } from "$lib/dynamicData.svelte";
-	import { ExternalLink } from "@lucide/svelte";
+	import ExternalLink from "@lucide/svelte/icons/external-link";
 	import UserContentViewer from "$lib/components/UserContentViewer.svelte";
 	import type { PageData } from "./$types";
     import { pageData } from "$lib/pageData.svelte";

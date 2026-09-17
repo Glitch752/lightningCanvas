@@ -5,15 +5,18 @@
     import type { CanvasGradeAssignment } from "$lib/server/canvas/grades";
     import type { PageData } from "./$types";
     import { pageData } from "$lib/pageData.svelte";
+    import { getInstanceContext } from "$lib/context/instance";
 
     const { data }: { data: PageData } = $props();
+    const instance = getInstanceContext().instance;
+    
     const grades = dynamicDataState(() => data.grades);
 
     const globalCourse = getGlobalCourse();
     const course = $derived(globalCourse.value?.course);
     pageData(() => ({
         title: `${course?.displayedName ?? course?.fullName ?? "Unknown course"} - Grades`,
-        canvasUrl: `${data.settings.canvasHostname}/courses/${page.params.courseId}/grades`
+        canvasUrl: `${instance.hostname}/courses/${page.params.courseId}/grades`
     }));
 
     const assignments = $derived(grades.value?.groups.flatMap((group) => group.assignments.map((assignment) => ({
@@ -60,7 +63,7 @@
                         {#each assignments as item (item.assignment.id)}
                             <a
                                 class="table-row assignment-row -input -flat" role="row"
-                                href={`/course/${page.params.courseId}/assignments/${item.assignment.id}`}
+                                href={`/instances/${page.params.instanceId}/course/${page.params.courseId}/assignments/${item.assignment.id}`}
                             >
                                 <span role="cell">
                                     <span class="name">{item.assignment.name}</span>

@@ -9,7 +9,7 @@
 
     pageData(() => ({
 		title: "Dashboard",
-		canvasUrl: data.settings.canvasHostname
+		canvasUrl: data.settings.canvasInstances[0]?.hostname ?? null
 	}));
 
     const courses = dynamicDataState(() => data.courses);
@@ -22,10 +22,10 @@
 
     const plannerItemsByCourse = $derived(
         plannerItems.value
-        ?.filter(item => item.context_type === "Course" && item.course_id && !plannerItemCompleted(item))
+        ?.filter(item => item.contextType === "Course" && item.courseId && !plannerItemCompleted(item))
         ?.reduce((acc, item) => {
-            if(!acc[item.course_id]) acc[item.course_id] = [];
-            acc[item.course_id].push(item);
+            if(!acc[item.courseId]) acc[item.courseId] = [];
+            acc[item.courseId].push(item);
             return acc;
         }, {} as Record<number, typeof plannerItems.value>)
     );
@@ -54,7 +54,7 @@
     </div>
     
     <div class="todo -vflex">
-        <TodoList {plannerItems} {courseItems} canvasHostname={data.settings.canvasHostname} />
+        <TodoList {plannerItems} {courseItems} instances={data.settings.canvasInstances} />
     </div>
 </div>
 

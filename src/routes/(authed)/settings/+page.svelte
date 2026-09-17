@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { FilePlusCorner } from "@lucide/svelte";
+	import FilePlusCorner from "@lucide/svelte/icons/file-plus-corner";
 	import type { ActionData } from "./$types";
 	import type { PageData } from "./$types";
     import { visualSettings, type VisualSettings } from "$lib/settings";
@@ -7,7 +7,6 @@
     import { pageData } from "$lib/pageData.svelte";
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
-    let canvasHostname = $derived(data.settings.canvasHostname);
 
     pageData(() => ({
         title: "Settings",
@@ -28,7 +27,7 @@
                 };
             }}
         >
-            <div class="-label-inset">
+            <!-- <div class="-label-inset">
                 <label for="canvasHostname">Canvas hostname</label>
                 <input
                     id="canvasHostname"
@@ -59,7 +58,7 @@
                         <FilePlusCorner />
                     </a>
                 {/if}
-            </div>
+            </div> -->
     
             <br />
             

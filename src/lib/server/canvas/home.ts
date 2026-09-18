@@ -23,6 +23,8 @@ async function loadHomeOrModules(instanceId: string, courseId: string): Promise<
 		if(!modules || modules.length === 0) return null;
 		return { modules };
 	}
+
+	return { page: home };
 }
 
 /** dynamic data for a course home page and its course-scoped todo/feedback. */
@@ -34,7 +36,7 @@ export const courseHomeDataRegistry = new DynamicDataRegistry<[instanceId: strin
 		refreshThresholdMs: 1000 * 60 * 5,
 		fetch: async () => {
 			const uid = await userId.get();
-			if (uid === null) return { home: null, plannerItems: null };
+			if(uid === null) return { home: null, plannerItems: null };
 
 			const startDate = new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString();
 			const [page, planner] = await Promise.all([

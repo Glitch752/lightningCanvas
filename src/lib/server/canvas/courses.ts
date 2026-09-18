@@ -90,7 +90,7 @@ export const courseData = new DynamicData<CanvasCourse[] | null>({
 	key: "canvas-courses",
 	ttlMs: 1000 * 60 * 60 * 24 * 30,
 	requireInitialFetch: false,
-	refreshThresholdMs: 1000 * 60 * 60, // courses don't change often, but we say 1 hour to be safe
+	refreshThresholdMs: 1000 * 60 * 10, // courses don't change often, but we might as well
 	fetch: async () => {
 		const userIds = await userId.get();
 		if(userIds === null) return null;
@@ -198,8 +198,10 @@ export const plannerItems = new DynamicData<CanvasPlannerItem[] | null>({
 /** dynamic data for every page in a course, like navigation tabs. */
 export const courseGlobalDataRegistry = new DynamicDataRegistry<[instanceId: string, courseId: string], CanvasCourseGlobal>(
 	([instanceId, courseId]) => new DynamicData<CanvasCourseGlobal>({
-		key: `instances/${instanceId}/courses/${courseId}/global`, ttlMs: 1000 * 60 * 60 * 24 * 30, requireInitialFetch: true,
-		refreshThresholdMs: 1000 * 60 * 60,
+		key: `instances/${instanceId}/courses/${courseId}/global`,
+		ttlMs: 1000 * 60 * 60 * 24 * 30,
+		requireInitialFetch: true,
+		refreshThresholdMs: 1000 * 60 * 10,
 		fetch: async () => {
 			const courses = await courseData.get();
 			const course = courses?.value?.find((item) => item.id === courseId) ?? null;

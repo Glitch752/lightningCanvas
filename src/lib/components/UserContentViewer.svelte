@@ -11,23 +11,40 @@
     function enhanceUserContent(node: HTMLElement) {
         const defaultBackground = parseColor(getComputedStyle(node).backgroundColor) ?? [0, 0, 0];
 
+        // pass 1: improve contrast of text, borders, etc.
+        // loooots of canvas content assumes a white background, so we adjust as much as we can.
+        function improveColor(
+            source: string | null,
+            background: ReturnType<typeof parseColor> & {},
+            apply: (color: NonNullable<ReturnType<typeof parseColor>>) => void,
+            target: NonNullable<ReturnType<typeof parseColor>>
+        ) {
+            if(!source) return;
+
+            const foreground = parseColor(source);
+            if(!foreground || contrastRatio(foreground, background) >= 4.5) return;
+
+            apply(contrastColor(foreground, background, target, background));
+        }
+
         // canvas _can_ declare font[color]... :p
         for(const element of node.querySelectorAll<HTMLElement>("[style], font[color]")) {
-            const foreground = element.style.color || element.getAttribute("color");
-            if(!foreground) continue;
-
-            const foregroundColor = parseColor(foreground);
-            if(!foregroundColor) continue;
-
             const background = nearestBackground(element, defaultBackground);
             // this is a horrible approach, but i'm getting tired of messing with this :p
             const text = parseColor(getComputedStyle(document.documentElement).getPropertyValue("--text")) ?? [0, 0, 0];
-            
-            if(contrastRatio(foregroundColor, background) < 4.5) {
-                const improved = contrastColor(foregroundColor, background, text, background);
-                if (element.style.color) element.style.color = colorString(improved);
-                else element.setAttribute("color", colorString(improved));
-            }
+
+            improveColor(
+                element.style.color || element.getAttribute("color"), background,
+                improved => {
+                    if(element.style.color) element.style.color = colorString(improved);
+                    else element.setAttribute("color", colorString(improved));
+                }, text
+            );
+
+            improveColor(
+                element.style.borderColor, background,
+                improved => element.style.borderColor = colorString(improved), text
+            );
         }
         
         // pass 2, personal preference: Canvas point sizes tend to feel larger here than they do in Canvas itself.
@@ -173,16 +190,23 @@
         overflow: auto;
         display: block;
         overflow: visible;
+        border-collapse: collapse;
         
         /* some courses have reeeeally weird table layouts and this makes them at least slightly readable */
         &:not([cellspacing]) {
             border-spacing: 1rem;
         }
     }
-    :global(tbody), :global(thead), :global(tfoot) {
+    :global(tbody), :global(thead), :global(tfoot), :global(caption) {
         width: 100%;
         /* feels weird but it works */
         display: table;
+    }
+    :global(caption) {
+        margin: 0.5rem 0;
+    }
+    :global(th), :global(td) {
+        border-width: 1.5px;
     }
 
     :global(p) {

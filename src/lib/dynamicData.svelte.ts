@@ -12,7 +12,7 @@ function startLoad() {
 
 	let finished = false;
 	return () => {
-		if (finished) return;
+		if(finished) return;
 		finished = true;
 
 		activeLoads = Math.max(0, activeLoads - 1);

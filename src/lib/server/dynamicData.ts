@@ -9,6 +9,7 @@ type StoredValue<T> = {
 	value: T;
 	fetchedAt: number;
 	expiresAt: number;
+	schemaVersion?: number;
 };
 
 /** the type sent to the client when loading dynamic data in a sveltekit ssr load function */
@@ -19,6 +20,8 @@ export type DynamicDataOptions<T> = {
 	/** a stable name used as the filename */
 	key: string;
 	fetch: () => Promise<T>;
+	/** optional schema version. if this is different than the stored version, we'll never use the cached value */
+	schemaVersion?: number;
 	/** how long a successfully fetched value is usable, in milliseconds */
 	ttlMs: number;
 	/** how long to wait before refetching the data, in milliseconds */
@@ -118,11 +121,12 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
 		}
 	}
 
-	/** return the current non-expired value without fetching new data */
+	/** return the current non-expired value without fetching new data. if the cached data is expired, returns undefined. */
 	async get(): Promise<StoredValue<T> | undefined> {
 		const stored = await this.read();
 		if(!stored) return undefined;
-		if(stored.expiresAt <= Date.now()) {
+		const schemaVersionDifferent = this.options.schemaVersion !== undefined && stored.schemaVersion !== this.options.schemaVersion;
+		if(stored.expiresAt <= Date.now() || schemaVersionDifferent) {
 			await this.delete();
 			return undefined;
 		}
@@ -148,7 +152,8 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
 			const stored: StoredValue<T> = {
 				value,
 				fetchedAt: Date.now(),
-				expiresAt: Date.now() + this.options.ttlMs
+				expiresAt: Date.now() + this.options.ttlMs,
+				schemaVersion: this.options.schemaVersion
 			};
 
 			await this.write(stored);
@@ -165,11 +170,24 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
 			}
 
 			return changed ? { kind: "updated" as const, value } : { kind: "unchanged" as const };
-		})().finally(() => { // crazy syntax but ok
+		})().catch(() => {
+			console.error(`Dynamic data '${this.options.key}' refresh failed`);
+			return { kind: "unchanged" as const };
+		}).finally(() => { // crazy syntax but ok
 			this.refreshPromise = undefined;
 		});
 
 		return this.refreshPromise;
+	}
+
+	/** fetch a new value or return the cached value if under the refresh threshold. */
+	async getOrRefresh(): Promise<StoredValue<T> | undefined> {
+		const stored = await this.get();
+		if(stored && stored.fetchedAt > Date.now() - this.options.refreshThresholdMs) {
+			return stored;
+		}
+		await this.refresh();
+		return await this.get();
 	}
 
 	/**

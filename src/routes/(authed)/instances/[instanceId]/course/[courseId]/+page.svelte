@@ -7,6 +7,7 @@
     import { pageData } from "$lib/pageData.svelte";
     import { getInstanceContext } from "$lib/context/instance";
     import TodoList from "../../../../TodoList.svelte";
+    import ModuleList from "./modules/ModuleList.svelte";
 
     let { data }: { data: PageData } = $props();
     const instance = getInstanceContext().instance;
@@ -24,12 +25,21 @@
 
 <div class="course-page">
     <div class="home-content">
-        {#if courseHome.value?.page}    
-            <!-- home page titles are often basically useless so we just show the full course name -->    
-            <UserContentViewer
-                title={course?.fullName ?? `Course ${courseId}`}
-                body={courseHome.value.page.body}
-            />
+        {#if courseHome.value}
+            {@const home = courseHome.value.home}
+            {#if !home}
+                <p class="-empty">No home page or modules found.</p>
+            {:else if "page" in home}
+                <!-- home page titles are often basically useless so we just show the full course name -->    
+                <UserContentViewer
+                    title={course?.fullName ?? `Course ${courseId}`}
+                    body={home.page.body}
+                />
+            {:else if "modules" in home}
+                <div class="home-modules">
+                    <ModuleList modules={home.modules} />
+                </div>
+            {/if}
         {:else}
             <p class="-empty">Loading course home...</p>
         {/if}
@@ -62,6 +72,10 @@
 .course-todo {
     grid-area: todo;
     gap: 1rem;
+}
+
+.home-modules {
+    padding: 1rem;
 }
 
 @media (max-width: 1000px) {

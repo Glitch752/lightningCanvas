@@ -166,7 +166,7 @@ export const plannerItems = new DynamicData<CanvasPlannerItem[] | null>({
 	ttlMs: 1000 * 60 * 60 * 24 * 30,
 	requireInitialFetch: false,
 	refreshIntervalMs: 1000 * 60 * 60 * 1, // refresh every hour
-	refreshThresholdMs: 1000 * 60 * 10, // likely to change pretty often
+	refreshThresholdMs: 1000 * 60 * 5, // likely to change pretty often
 	fetch: async () => {
 		const uid = await userId.get();
 		if(uid === null) {

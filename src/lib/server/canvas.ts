@@ -64,5 +64,7 @@ export const userId = new ImmutableFetchedData<{ [id: string]: number | null }, 
 
 		return Object.fromEntries(userIds);
 	},
-	key: () => getSettings().then((settings) => settings.canvasInstances.map(i => i.id))
+	key: () => getSettings().then((settings) => settings.canvasInstances
+		.map(i => i.id)
+		.toSorted((a, b) => a.localeCompare(b)))
 });

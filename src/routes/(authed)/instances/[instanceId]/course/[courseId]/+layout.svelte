@@ -9,56 +9,20 @@
     import type { CanvasCourseGlobal } from "$lib/server/canvas/courses";
     import { createContext, type Snippet } from "svelte";
     import { getInstanceContext } from "$lib/context/instance";
+    import CourseTabs from "./CourseTabs.svelte";
 
     let { children, data }: { children: Snippet; data: LayoutData } = $props();
     const instance = getInstanceContext().instance;
+    const courseId = $derived(page.params.courseId);
 
     const courseGlobal = dynamicDataState(() => data.courseGlobal);
-    const courseId = $derived(page.params.courseId);
-    const course = $derived(courseGlobal.value?.course);
-    const tabs = $derived(courseGlobal.value?.tabs.filter((tab) => !tab.hidden && tab.visibility !== "none") ?? []);
-    const localTabPaths: Record<string, string> = {
-        home: "",
-        modules: "/modules",
-        grades: "/grades"
-    };
-    const internalTabs = $derived(tabs.filter((tab) => tab.id in localTabPaths));
-    const externalTabs = $derived(tabs.filter((tab) => !(tab.id in localTabPaths)));
-
     setGlobalCourse(courseGlobal);
-
-    function makeAbsolute(url: string): string {
-        if(url.startsWith("http")) return url;
-        if(instance.hostname) return `${instance.hostname}${url}`;
-        return url;
-    }
-
-    function localTabHref(tabId: string): string {
-        return `/instances/${instance.id}/course/${courseId}${localTabPaths[tabId]}`;
-    }
 </script>
 
 <div class="course-layout">
-    <aside class="course-tabs -vflex">
-        <h1>{course?.displayedName ?? `Course ${courseId}`}</h1>
-        {#if course?.courseCode}
-            <p class="course-code">{course.courseCode}</p>
-        {/if}
-        <nav class="-vflex">
-            {#each internalTabs as tab}
-                <a
-                    href={localTabHref(tab.id)}
-                    class:active={page.route.id === `/(authed)/instances/[instanceId]/course/[courseId]${localTabPaths[tab.id]}`}
-                >{tab.label}</a>
-            {/each}
-            {#each externalTabs as tab}
-                <a href={makeAbsolute(tab.html_url ?? "")} target="_blank" rel="noreferrer">{tab.label}</a>
-            {/each}
-        </nav>
-        {#if courseGlobal.error}
-            <p class="-empty">Error loading course: {courseGlobal.error}</p>
-        {/if}
-    </aside>
+    {#if courseId}
+        <CourseTabs {instance} {courseId} {courseGlobal} />
+    {/if}
 
     <div class="course-content">
         {@render children()}
@@ -71,33 +35,6 @@
     grid-template-columns: 14rem minmax(0, 1fr);
     min-height: 100%;
     gap: 1rem;
-}
-
-.course-tabs {
-    gap: 0.5rem;
-
-    h1 { font-size: var(--font-lg); }
-    .course-code {
-        color: var(--text-muted);
-        font-size: var(--font-xs);
-        margin-bottom: 1rem;
-    }
-    nav {
-        gap: 0.25rem;
-        position: sticky;
-        top: 0rem;
-    }
-    nav a {
-        padding: 0.4rem 0.5rem;
-        border-radius: 0 var(--radius) var(--radius) 0;
-
-        &.active {
-            background-color: var(--bg-elevated);
-            color: var(--text);
-            font-weight: bold;
-            border-left: 1px solid var(--primary);
-        }
-    }
 }
 
 .course-content {

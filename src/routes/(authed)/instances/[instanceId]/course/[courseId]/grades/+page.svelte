@@ -21,6 +21,7 @@
 
     const assignments = $derived(grades.value?.groups.flatMap((group) => group.assignments.map((assignment) => ({
         assignment,
+        groupWeight: group.group_weight,
         groupName: group.name
     }))).toSorted((a, b) => {
         const aDate = a.assignment.due_at ?? a.assignment.created_at;
@@ -67,7 +68,7 @@
                             >
                                 <span role="cell">
                                     <span class="name">{item.assignment.name}</span>
-                                    <span class="group">{item.groupName}</span>
+                                    <span class="group">{item.groupName} ({item.groupWeight}%)</span>
                                 </span>
                                 <span role="cell">{formatDate(item.assignment.due_at)}</span>
                                 <span role="cell">{formatDate(item.assignment.submission?.submitted_at)}</span>

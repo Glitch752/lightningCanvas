@@ -64,6 +64,9 @@
             {#if canvasAssignment.locked_for_user}
 			    <p class="notice -warning">{canvasAssignment.lock_explanation ?? "This assignment is locked."}</p>
             {/if}
+			{#if canvasAssignment.omit_from_final_grade}
+			    <p class="notice -info">This assignment does not count toward the final grade.</p>
+            {/if}
 		</header>
 
 		<div class="assignment-content">
@@ -188,8 +191,10 @@
         grid-area: notice;
 
         padding: 0.5rem 0.75rem;
-        border: 1px solid var(--warning);
         border-radius: var(--radius);
+
+		&.-warning { border: 1px solid var(--warning); }
+		&.-info { border: 1px solid var(--info); }
     }
 }
 

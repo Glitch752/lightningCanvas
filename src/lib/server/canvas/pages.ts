@@ -15,7 +15,7 @@ export const coursePageDataRegistry = new DynamicDataRegistry<[
 ], CanvasCoursePage>(
     ([instanceId, courseId, pageId]) => {
         return new DynamicData<CanvasCoursePage>({
-            key: `courses/${courseId}/pages/${pageId}`,
+            key: `instances/${instanceId}/courses/${courseId}/pages/${pageId}`,
             ttlMs: 1000 * 60 * 60 * 24 * 30,
             requireInitialFetch: false,
             refreshThresholdMs: 1000 * 60 * 15,

@@ -12,6 +12,7 @@ export type CanvasAssignment = {
     points_possible: number | null;
     submission_types: string[];
     published: boolean;
+    omit_from_final_grade?: boolean;
     locked_for_user: boolean;
     lock_explanation?: string | null;
     submission?: CanvasSubmission | null;

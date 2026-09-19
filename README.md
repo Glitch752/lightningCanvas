@@ -6,9 +6,9 @@ A work-in-progress single-user-focused [Canvas LMS](https://canvas.instructure.c
 
 On slow computers and networks, I've always been fed up with how long Canvas takes to load. This project aims to make the fastest Canvas frontend possible by caching client-side, proactively polling slow API endpoints, reducing unnecessary network requests, using fast SvelteKit SSR with page preloading, replacing slow embeds (*cough* youtube), and removing all the unnecessary bloat.
 
-Secondary goals are customizability, better use of space than the official Canvas frontend, better views for things like tasks and grades, and acting as a webhook client to push calendar/task data to other apps.
+Secondary goals are linking multiple canvas instances under a single interface, customizability, better use of space than the official Canvas frontend, better views for things like tasks and grades, and acting as a webhook client to push calendar/task data to other apps.
 
-Doesn't replicate the entire (or even a large fraction of) Canvas functionality, but provides a faster route for common things like opening assignments, checking grades, and viewing tasks. Things like submission, discussions, users, and other things still just redirect to the official Canvas frontend.
+This doesn't replicate the entire (or even a large fraction of) Canvas functionality, but provides a faster route for common things like opening assignments, checking grades, and viewing tasks. Things like submission, discussions, users, and more still just redirect to the official Canvas frontend.
 
 ## Roadmap
 - [x] courses page
@@ -19,12 +19,14 @@ Doesn't replicate the entire (or even a large fraction of) Canvas functionality,
 - [x] course pages... page and rendering
 - [x] course assignment pages and rendering
 - [x] course grades page
+- [x] link multiple Canvas accounts/campus instances
 - [ ] course assignment submission for certain simple types (text entry and url maybe)
 - [ ] calendar page
 - [ ] external calendar/tasks sync
+- [ ] starring/pinning modules, assignments, and pages
 - [ ] host and optimize images and other media
 
-- [ ] link multiple Canvas accounts/campus instances
+- [ ] better course art, maybe procedurally generated pixel art? (ooh)
 - [ ] allow adding custom course-like items on the dashboard for courses that don't exist in Canvas
 - [ ] visual customization options like themes
 - [ ] pin items (assignments, pages, modules, whatever) to nav and homepage

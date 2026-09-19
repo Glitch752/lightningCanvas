@@ -14,6 +14,7 @@
 	--border-focus: color-mix(in srgb, var(--primary) 50%, var(--border) 50%);
 
 	--success: #a8d8c0;
+	--info: #a3c2e3;
 	--warning: #e8d3a3;
 	--danger: #e3a3b0;
 
@@ -172,6 +173,7 @@ a {
 /* kind of hacky way to win precedence */
 :not(#_).-error   { color: var(--danger); }
 :not(#_).-warning { color: var(--warning); }
+:not(#_).-info { color: var(--info); }
 :not(#_).-success { color: var(--success); }
 
 /*

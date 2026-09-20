@@ -18,6 +18,25 @@ export type CanvasAssignment = {
     submission?: CanvasSubmission | null;
 };
 
+export type CanvasAssignments = { assignments: CanvasAssignment[] };
+
+/** dynamic data for all assignments in a course */
+export const courseAssignmentsDataRegistry = new DynamicDataRegistry<[
+    instanceId: string, courseId: string
+], CanvasAssignments>(([instanceId, courseId]) => new DynamicData<CanvasAssignments>({
+    key: `instances/${instanceId}/courses/${courseId}/assignments`,
+    ttlMs: 1000 * 60 * 60 * 24 * 30,
+    requireInitialFetch: true,
+    refreshThresholdMs: 1000 * 60 * 15,
+    fetch: async () => {
+        const assignments = await canvasFetch<CanvasAssignment[]>(
+            instanceId,
+            `/api/v1/courses/${encodeURIComponent(courseId)}/assignments?include[]=submission&per_page=500`
+        );
+        return { assignments: assignments ?? [] };
+    }
+}));
+
 export type CanvasSubmissionComment = {
     id: number;
     author_id: number;

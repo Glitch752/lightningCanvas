@@ -15,6 +15,7 @@
     const localTabPaths: Record<string, string> = {
         home: "",
         modules: "/modules",
+        assignments: "/assignments",
         grades: "/grades"
     };
 

@@ -20,10 +20,14 @@ This doesn't replicate the entire (or even a large fraction of) Canvas functiona
 - [x] course assignment pages and rendering
 - [x] course grades page
 - [x] link multiple Canvas accounts/campus instances
+- [x] assignments page
+- [x] pages... page
+- [ ] announcements page and home screen preview
 - [ ] course assignment submission for certain simple types (text entry and url maybe)
 - [ ] calendar page
 - [ ] external calendar/tasks sync
 - [ ] starring/pinning modules, assignments, and pages
+- [ ] module file preview/download (/courses/files/...)
 - [ ] host and optimize images and other media
 
 - [ ] better course art, maybe procedurally generated pixel art? (ooh)

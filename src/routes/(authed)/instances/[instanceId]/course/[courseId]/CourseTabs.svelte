@@ -16,6 +16,7 @@
         home: "",
         modules: "/modules",
         assignments: "/assignments",
+        pages: "/pages",
         grades: "/grades"
     };
 

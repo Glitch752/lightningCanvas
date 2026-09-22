@@ -6,13 +6,13 @@ A work-in-progress single-user-focused [Canvas LMS](https://canvas.instructure.c
 
 On slow computers and networks, I've always been fed up with how long Canvas takes to load. This project aims to make the fastest Canvas frontend possible by caching client-side, proactively polling slow API endpoints, reducing unnecessary network requests, using fast SvelteKit SSR with page preloading, replacing slow embeds (*cough* youtube), and removing all the unnecessary bloat.
 
-Secondary goals are linking multiple canvas instances under a single interface, customizability, better use of space than the official Canvas frontend, better views for things like tasks and grades, and acting as a webhook client to push calendar/task data to other apps.
+Secondary goals are linking multiple canvas instances under a single interface, customizability, better use of space than the official Canvas frontend, better views for things like tasks and grades, and acting as a webhook server to bidirectionally sync calendar/task data to other apps.
 
 This doesn't replicate the entire (or even a large fraction of) Canvas functionality, but provides a faster route for common things like opening assignments, checking grades, and viewing tasks. Things like submission, discussions, users, and more still just redirect to the official Canvas frontend.
 
 ## Roadmap
 - [x] courses page
-- [x] todo list
+- [x] todo list with canvas planner override sync
 - [x] render course home page
 - [x] course modules page
 - [x] cache GC
@@ -29,6 +29,7 @@ This doesn't replicate the entire (or even a large fraction of) Canvas functiona
 - [ ] starring/pinning modules, assignments, and pages
 - [ ] module file preview/download (/courses/files/...)
 - [ ] host and optimize images and other media
+- [ ] show when page comes from cached serviceworker
 
 - [ ] better course art, maybe procedurally generated pixel art? (ooh)
 - [ ] allow adding custom course-like items on the dashboard for courses that don't exist in Canvas

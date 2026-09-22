@@ -25,10 +25,13 @@
     import { type DynamicDataState } from "$lib/dynamicData.svelte";
 	import Clock from "@lucide/svelte/icons/clock";
 	import RotateCcwClock from "@lucide/svelte/icons/rotate-ccw-clock";
+    import CircleCheck from "@lucide/svelte/icons/circle-check";
+    import Circle from "@lucide/svelte/icons/circle";
     import { formatRelative } from "$lib/datetime";
     import type { CanvasCourse, CanvasPlannerItem } from "$lib/server/canvas/courses";
     import type { Snippet } from "svelte";
     import type { CanvasInstance } from "$lib/settings";
+    import { SvelteSet } from "svelte/reactivity";
 
     const { plannerItems, courseItems, instances }: {
         plannerItems: DynamicDataState<CanvasPlannerItem[] | null | undefined>,
@@ -60,6 +63,63 @@
         }));
 
     let showCompletedItems = $state(false);
+
+    /** planner items that are currently being updated */
+    const pendingPlannerItems = $state(new SvelteSet<string>());
+    /** without a specific key function, we could have duplicates across instances and stuff */
+    const plannerItemKey = (item: CanvasPlannerItem) => `${item.instanceId}:${item.plannableType}:${item.plannableId}`;
+
+    async function togglePlannerItem(item: CanvasPlannerItem) {
+        const key = plannerItemKey(item);
+        // don't make a second request while the first one may still be creating the override
+        if(pendingPlannerItems.has(key)) return;
+        pendingPlannerItems.add(key);
+
+        const oldCompleted = plannerItemCompleted(item);
+        const oldPlannerOverride = item.plannerOverride;
+
+        const markedComplete = !oldCompleted;
+        plannerItems.update?.(items => items?.map(current => current === item ? {
+            ...current,
+            plannerOverride: { id: item.plannerOverride?.id, markedComplete }
+        } : current));
+
+        try {
+            const response = await fetch("/planner", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    instanceId: item.instanceId,
+                    plannableType: item.plannableType,
+                    plannableId: item.plannableId,
+                    plannerOverrideId: item.plannerOverride?.id,
+                    markedComplete
+                })
+            });
+            if(!response.ok) throw new Error(await response.text());
+
+            const result = await response.json() as { plannerOverrideId?: number };
+            // save the new planner override id if it was created
+            plannerItems.update?.(items => items?.map(current =>
+                plannerItemKey(current) === key ? {
+                    ...current,
+                    plannerOverride: {
+                        id: result.plannerOverrideId,
+                        markedComplete
+                    }
+                } : current
+            ));
+        } catch(error) {
+            plannerItems.update?.(items => items?.map(current => current === item ? {
+                ...current,
+                plannerOverride: oldPlannerOverride
+            } : current));
+            
+            console.error("Failed to update planner item", error);
+        } finally {
+            pendingPlannerItems.delete(key);
+        }
+    }
 </script>
 
 <h1 class="-hflex">
@@ -84,6 +144,15 @@
             <span class="plannable-title">{item.plannable.title}</span>
             {@render content()}
         </a>
+        <button
+            class="toggle-complete"
+            title={plannerItemCompleted(item) ? "Mark incomplete" : "Mark complete"}
+            aria-label={plannerItemCompleted(item) ? "Mark incomplete" : "Mark complete"}
+            disabled={pendingPlannerItems.has(plannerItemKey(item))}
+            onclick={(event) => { event.preventDefault(); event.stopPropagation(); togglePlannerItem(item); }}
+        >
+            {#if plannerItemCompleted(item)}<CircleCheck />{:else}<Circle />{/if}
+        </button>
     </li>
 {/snippet}
 
@@ -92,9 +161,15 @@
 {:else}
     {@const timeFormatter = new Intl.DateTimeFormat([], { month: "numeric", day: "numeric", hour: "numeric", minute: "numeric" })}
     {@const dateFormatter = new Intl.DateTimeFormat([], { weekday: "short", month: "short", day: "numeric" })}
-    {#each Object.entries(todoGroupedByDate) as [date, items]}
-        {@const hasIncompleteItems = items.some(item => !item.submissions?.submitted)}
-        <h2 class="time-header -hflex" class:completed={!hasIncompleteItems}>
+    {#each Object.entries(todoGroupedByDate).toSorted((a, b) =>
+        new Date(a[0]).getTime() - new Date(b[0]).getTime()
+    ) as [date, items]}
+        {@const hasIncompleteItems = items.some(item => !plannerItemCompleted(item))}
+        <h2
+            class="time-header -hflex"
+            class:completed={!hasIncompleteItems}
+            class:today={new Date(date).toDateString() === new Date().toDateString()}
+        >
             {dateFormatter.format(new Date(date))}
             <!-- if before today, show a little overdue icon -->
             {#if new Date(date + 24 * 60 * 60 * 1000) < new Date() && hasIncompleteItems}
@@ -180,8 +255,12 @@ h2.time-header {
     &.completed {
         opacity: 0.5;
     }
+    &.today {
+        color: color-mix(in srgb, var(--primary) 30%, var(--text));
+    }
 }
 li {
+    position: relative;
     list-style: none;
     padding: 0.35rem 0.35rem 0.35rem 0.5rem;
     border-radius: var(--radius) 0 0 var(--radius);
@@ -193,6 +272,31 @@ li {
         color: var(--text);
         gap: 0.25rem;
     }
+
+    .toggle-complete {
+        position: absolute;
+        top: 0.25rem;
+        right: 0.35rem; /* looks a little more balanced with the border */
+        padding: 0;
+        line-height: 0;
+        border: 0;
+        background: transparent;
+        color: var(--text-muted);
+        opacity: 0;
+        transition: opacity 120ms ease, color 120ms ease;
+
+        :global(svg) {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        &:hover {
+            color: var(--primary);
+        }
+    }
+    &:hover .toggle-complete, &:focus-within .toggle-complete {
+        opacity: 1;
+    }
+
     .course-name {
         color: var(--highlight);
         font-size: var(--font-xs);

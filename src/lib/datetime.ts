@@ -19,7 +19,8 @@ export function formatRelative(date: Date): string {
         else if(diffMinutes === 1) return "in a minute";
         else return "just now";
     } else if(diffDays === -1) {
-        return "yesterday";
+        if(diffHours > -23) return `${-diffHours}h ago`;
+        else return "yesterday";
     } else {
         return `${-diffDays} days ago`;
     }

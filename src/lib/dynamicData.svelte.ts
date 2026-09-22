@@ -27,6 +27,8 @@ export type DynamicDataState<T> = {
 	loading: boolean;
 	/** any error that occurred during the refresh */
 	error: unknown;
+	/** update the current value without waiting for a server refresh */
+	update?: (update: (value: T | undefined) => T | undefined) => void;
 };
 
 /**
@@ -63,6 +65,9 @@ export function dynamicDataState<T>(v: () => SKLoadDynamicData<T>): DynamicDataS
 	return {
 		get value() { return value; },
 		get loading() { return loading; },
-		get error() { return error; }
+		get error() { return error; },
+		update: (update: (current: T | undefined) => T | undefined) => {
+			value = update(value);
+		}
 	};
 }

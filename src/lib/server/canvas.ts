@@ -6,16 +6,31 @@ function stripGQLWhitespace(query: string): string {
 }
 
 /** fetch data from the Canvas API */
-export async function canvasFetch<T>(instanceId: string, path: string, headers: Record<string, string> = {}): Promise<T | null> {
+export type CanvasFetchOptions = {
+	method?: "GET" | "POST" | "PUT" | "DELETE";
+	body?: Record<string, unknown>;
+	headers?: Record<string, string>;
+};
+
+export async function canvasFetch<T>(instanceId: string, path: string, options: CanvasFetchOptions | Record<string, string> = {}): Promise<T | null> {
     const settings = await getSettings();
 	const instance = settings.canvasInstances.find(i => i.id === instanceId);
 	if(!instance || !instance.hostname || !instance.apiKey) return null;
+
+	const isOptions = "method" in options || "body" in options || "headers" in options;
+	const fetchOptions = isOptions ? options as CanvasFetchOptions : { headers: options as Record<string, string> };
+	const headers = { Authorization: `Bearer ${instance.apiKey}`, ...fetchOptions.headers };
+	if(fetchOptions.body) headers["Content-Type"] = "application/x-www-form-urlencoded";
 
 	console.log(`fetching Canvas data from instance ${instanceId}: ${path}`);
 	const time = Date.now();
 	
     const response = await fetch(`${instance.hostname}${path}`, {
-        headers: { Authorization: `Bearer ${instance.apiKey}`, ...headers }
+		method: fetchOptions.method,
+		body: fetchOptions.body ? new URLSearchParams(
+			Object.entries(fetchOptions.body).map(([key, value]) => [key, String(value)])
+		).toString() : undefined,
+		headers
     });
 	console.log(`Canvas fetch ${instanceId}: ${path} took ${Date.now() - time}ms`);
 

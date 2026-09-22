@@ -63,6 +63,7 @@ export type CanvasAPIPlannerItemResponse = {
     plannable_date: string;
     plannable: { id: string; title: string; points_possible: number; due_at: string; };
 	planner_override: {
+		id: number;
 		// this type is actually a lot more complicated but for now we'll just care about completion
 		marked_complete: boolean;
 	} | null;
@@ -72,7 +73,11 @@ export type CanvasAPIPlannerItemResponse = {
 
 /** the planner item type we send to clients */
 export type CanvasPlannerItem = {
-	plannerOverride?: { markedComplete: boolean; };
+	plannerOverride?: {
+		/** canvas always gives us this, but it can be unknown during local updates */
+		id?: number;
+		markedComplete: boolean;
+	};
 	submissions?: { submitted: boolean; feedback?: { comment?: string; }; };
 	
 	plannableType: "assignment" | "quiz" | string;
@@ -90,7 +95,7 @@ export const courseData = new DynamicData<CanvasCourse[] | null>({
 	key: "canvas-courses",
 	ttlMs: 1000 * 60 * 60 * 24 * 30,
 	requireInitialFetch: false,
-	refreshThresholdMs: 1000 * 60 * 10, // courses don't change often, but we might as well
+	refreshThresholdMs: 1000 * 60 * 5, // courses don't change often, but we might as well
 	fetch: async () => {
 		const userIds = await userId.get();
 		if(userIds === null) return null;
@@ -134,6 +139,7 @@ export const courseData = new DynamicData<CanvasCourse[] | null>({
 export function transformAPIPlannerItem(item: CanvasAPIPlannerItemResponse, instanceId: string): CanvasPlannerItem {
 	return {
 		plannerOverride: item.planner_override ? {
+			id: item.planner_override.id,
 			markedComplete: item.planner_override.marked_complete
 		} : undefined,
 		submissions: item.submissions ? {
@@ -166,7 +172,7 @@ export const plannerItems = new DynamicData<CanvasPlannerItem[] | null>({
 	ttlMs: 1000 * 60 * 60 * 24 * 30,
 	requireInitialFetch: false,
 	refreshIntervalMs: 1000 * 60 * 60 * 1, // refresh every hour
-	refreshThresholdMs: 1000 * 60 * 5, // likely to change pretty often
+	refreshThresholdMs: 1000 * 60 * 1, // likely to change often
 	fetch: async () => {
 		const uid = await userId.get();
 		if(uid === null) {

@@ -190,6 +190,18 @@ export class DynamicData<T> extends StoredData<StoredValue<T>> {
 		return await this.get();
 	}
 
+	/** mark the cached value stale without removing it, so it can still be served immediately. */
+	async invalidateRefreshThreshold(): Promise<void> {
+		const stored = await this.read();
+		if(stored) await this.write({ ...stored, fetchedAt: 0 });
+	}
+
+	/** update the cached value in place to locally simulate operations. automatically marks it as stale. */
+	async updateCachedValue(update: (value: T) => T): Promise<void> {
+		const stored = await this.read();
+		if(stored) await this.write({ ...stored, value: update(stored.value), fetchedAt: 0 });
+	}
+
 	/**
      * get cached data immediately and refresh it in the background.  
      * this is just slightly nicer wrapper for running `get()` and `refresh()` and sending the changes

@@ -28,7 +28,7 @@
 	--misc-3: #e8f5c2;
 	--misc-4: #c9f5c2;
 	--misc-5: #c2f5e7;
-	--misc-6: #c8c2f5;
+	--misc-6: #adbbf0;
 
 	--font-xs: 0.65rem;
 	--font-sm: 0.75rem;
@@ -59,8 +59,8 @@ h1, h2, h3, h4, h5, h6 {
 	margin: 0;
 }
 h1 { font-size: var(--font-xl); }
-h2 { font-size: var(--font-lg); }
-h3 { font-size: var(--font-md); }
+h2 { font-size: var(--font-xl); }
+h3 { font-size: var(--font-lg); }
 p {
 	margin: 0;
 }

@@ -23,6 +23,7 @@ This doesn't replicate the entire (or even a large fraction of) Canvas functiona
 - [x] assignments page
 - [x] pages... page
 - [ ] announcements page and home screen preview
+- [ ] more consistent styling/labelling for page headers
 - [ ] course assignment submission for certain simple types (text entry and url maybe)
 - [ ] calendar page
 - [ ] external calendar/tasks sync
@@ -30,6 +31,7 @@ This doesn't replicate the entire (or even a large fraction of) Canvas functiona
 - [ ] module file preview/download (/courses/files/...)
 - [ ] host and optimize images and other media
 - [ ] show when page comes from cached serviceworker
+- [ ] rewrite URLs and mathML in user content
 
 - [ ] better course art, maybe procedurally generated pixel art? (ooh)
 - [ ] allow adding custom course-like items on the dashboard for courses that don't exist in Canvas

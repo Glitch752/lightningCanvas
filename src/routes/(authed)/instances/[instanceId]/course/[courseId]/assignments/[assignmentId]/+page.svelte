@@ -274,6 +274,7 @@
 			"header"
 			"content"
 			"sidebar";
+		padding-right: 2rem;
 	}
 }
 </style>

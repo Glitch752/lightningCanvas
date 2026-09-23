@@ -1,7 +1,10 @@
 <script lang="ts">
+    import { page } from "$app/state";
+    import { getInstanceContext } from "$lib/context/instance";
     import { colorString, contrastColor, contrastRatio, nearestBackground, parseColor } from "./contrastOptimization";
 
     const { title, body }: { title?: string, body?: string } = $props();
+    const instance = getInstanceContext().instance;
 
     /**
      * the raw HTML is rendered first, then we adjust it for visual consistency on the client
@@ -95,10 +98,92 @@
                 element.replaceWith(iframe);
             }
         }
-
         if(youtubeLoaded) {
             // load lite-youtube lazily if we replaced any youtube embeds
             import("@justinribeiro/lite-youtube");
+        }
+
+        // pass 5: use custom rendering for latex/mathml
+        for(const image of node.querySelectorAll<HTMLImageElement>("img[x-canvaslms-safe-mathml]")) {
+            const source = image.getAttribute("x-canvaslms-safe-mathml");
+            if(!source) continue;
+
+            // move the embedded MathML to the document
+            // browser mathml support is pretty good: https://caniuse.com/?search=mathml
+            const template = document.createElement("template");
+            template.innerHTML = source;
+            const sourceMath = template.content.querySelector("math");
+            if(!sourceMath) continue;
+
+            const wrapper = document.createElement("span");
+            wrapper.className = "canvas-equation";
+            wrapper.appendChild(document.importNode(sourceMath, true));
+            image.replaceWith(wrapper);
+        }
+
+        // pass 6: rewrite urls that we can handle ourselves
+        const instanceId = page.params.instanceId;
+        const courseId = page.params.courseId;
+        if(!instanceId || !courseId) return;
+
+        let canvasBase: URL;
+        try {
+            canvasBase = new URL(`${instance.hostname.replace(/\/+$/, "")}/`);
+        } catch {
+            return;
+        }
+
+        function decodePathSegment(segment: string): string | undefined {
+            try { return decodeURIComponent(segment); }
+            catch { return undefined; }
+        }
+
+        function localCourseUrl(href: string): string | undefined {
+            // hash-only and query-only are local to this page
+            if(!instanceId || !href || href.startsWith("#") || href.startsWith("?")) return undefined;
+
+            let url: URL;
+            try { url = new URL(href, canvasBase); }
+            catch { return undefined; }
+            if(url.origin !== canvasBase.origin) return undefined;
+
+            let segments = url.pathname.split("/").filter(Boolean).map(decodePathSegment);
+            if(segments.some(segment => segment === undefined)) return undefined;
+            let path = segments as string[];
+
+            // Canvas installations can be hosted below a path prefix (e.g. /canvas).
+            const baseSegments = canvasBase.pathname.split("/").filter(Boolean);
+            if(baseSegments.length && baseSegments.every((segment, index) => path[index] === segment)) {
+                path = path.slice(baseSegments.length);
+            }
+
+            // technically pages could link to other courses i guess? i doubt it will ever matter
+            if(path[0] !== "courses" || path[1] !== courseId) return undefined;
+
+            let localPath: string;
+            const route = path.slice(2);
+            if(route.length === 0) localPath = "";
+            else if(route.length === 1 && ["modules", "assignments", "pages", "announcements", "grades"].includes(route[0])) {
+                localPath = `/${route[0]}`;
+            } else if(route.length === 2 && route[0] === "assignments") {
+                // this feels awfully hacky but i don't know how these routes specifically work.
+                // is /syllabus hardcoded?
+                if(route[1] === "syllabus") return undefined;
+                localPath = `/assignments/${encodeURIComponent(route[1])}`;
+            } else if(route.length === 2 && route[0] === "pages") {
+                localPath = `/pages/${encodeURIComponent(route[1])}`;
+            } else if(route.length === 2 && (route[0] === "announcements" || route[0] === "discussion_topics")) {
+                localPath = `/announcements/${encodeURIComponent(route[1])}`;
+            } else {
+                return undefined;
+            }
+
+            return `/instances/${encodeURIComponent(instanceId)}/course/${encodeURIComponent(courseId)}${localPath}${url.search}${url.hash}`;
+        }
+
+        for(const link of node.querySelectorAll<HTMLAnchorElement>("a[href]")) {
+            const localUrl = localCourseUrl(link.getAttribute("href") ?? "");
+            if(localUrl) link.href = localUrl;
         }
     }
 
@@ -167,6 +252,18 @@
         height: auto;
         border-radius: var(--radius);
     }
+
+    :global(.canvas-equation) {
+        display: inline-block;
+        max-width: 100%;
+        overflow-x: auto;
+        vertical-align: middle;
+        color: var(--text-muted);
+    }
+    :global(.canvas-equation math) {
+        color: inherit;
+    }
+
     :global(iframe) {
         max-width: 100%;
         border: none;

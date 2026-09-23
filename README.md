@@ -22,16 +22,17 @@ This doesn't replicate the entire (or even a large fraction of) Canvas functiona
 - [x] link multiple Canvas accounts/campus instances
 - [x] assignments page
 - [x] pages... page
-- [ ] announcements page and home screen preview
-- [ ] more consistent styling/labelling for page headers
+- [x] announcements page
+- [x] optimize colors, replace embeds, rewrite URLs and MathML, and adjust other annoying styling in user content
+- [ ] recent announcements on home screen and course page preview
 - [ ] course assignment submission for certain simple types (text entry and url maybe)
 - [ ] calendar page
 - [ ] external calendar/tasks sync
 - [ ] starring/pinning modules, assignments, and pages
 - [ ] module file preview/download (/courses/files/...)
-- [ ] host and optimize images and other media
+- [ ] host, cache, and optimize images and other media
 - [ ] show when page comes from cached serviceworker
-- [ ] rewrite URLs and mathML in user content
+- [ ] syllabus and other special assignment pages (if there are any?)
 
 - [ ] better course art, maybe procedurally generated pixel art? (ooh)
 - [ ] allow adding custom course-like items on the dashboard for courses that don't exist in Canvas

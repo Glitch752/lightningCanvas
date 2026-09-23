@@ -8,6 +8,7 @@
     import { getInstanceContext } from "$lib/context/instance";
     import TodoList from "../../../../TodoList.svelte";
     import ModuleList from "./modules/ModuleList.svelte";
+    import PageHeader from "$lib/components/PageHeader.svelte";
 
     let { data }: { data: PageData } = $props();
     const instance = getInstanceContext().instance;
@@ -24,17 +25,16 @@
 </script>
 
 <div class="course-page">
-    <div class="home-content">
+    <div class="home-content -vflex">
+        <PageHeader title={course?.fullName ?? `Course ${courseId}`} />
+
         {#if courseHome.value}
             {@const home = courseHome.value.home}
             {#if !home}
                 <p class="-empty">No home page or modules found.</p>
             {:else if "page" in home}
                 <!-- home page titles are often basically useless so we just show the full course name -->    
-                <UserContentViewer
-                    title={course?.fullName ?? `Course ${courseId}`}
-                    body={home.page.body}
-                />
+                <UserContentViewer body={home.page.body} />
             {:else if "modules" in home}
                 <div class="home-modules">
                     <ModuleList modules={home.modules} />
@@ -68,6 +68,7 @@
 }
 .home-content {
     grid-area: content;
+    gap: 1rem;
 }
 .course-todo {
     grid-area: todo;

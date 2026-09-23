@@ -6,6 +6,7 @@
     import { pageData } from "$lib/pageData.svelte";
     import { getInstanceContext } from "$lib/context/instance";
     import ModuleList from "./ModuleList.svelte";
+    import PageHeader from "$lib/components/PageHeader.svelte";
 
 	let { data }: { data: PageData } = $props();
     const instance = getInstanceContext().instance;
@@ -20,11 +21,8 @@
     }));
 </script>
 
-<div class="modules-page">
-	<header class="page-header -hflex">
-		<h1>Modules</h1>
-		{#if modules.value}<span class="count">({modules.value.modules.length})</span>{/if}
-	</header>
+<div class="modules-page -vflex">
+    <PageHeader title="Modules" count={modules.value?.modules.length} />
 
 	{#if modules.value?.modules.length}
 		<ModuleList modules={modules.value.modules} />
@@ -40,16 +38,6 @@
 .modules-page {
 	max-width: 100ch;
 	margin: 0 auto;
-}
-
-.page-header {
-	align-items: baseline;
-	gap: 0.5rem;
-	margin-bottom: 1rem;
-	
-    .count {
-        color: var(--text-muted);
-        font-size: var(--font-md);
-    }
+	gap: 1rem;
 }
 </style>

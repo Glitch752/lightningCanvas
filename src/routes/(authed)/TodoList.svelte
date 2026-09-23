@@ -141,7 +141,7 @@
             rel={isPlannerLinkExternal(item) ? "noreferrer" : undefined}
         >
             <span class="course-name">{course?.displayedName}</span>
-            <span class="plannable-title">{item.plannable.title}</span>
+            <span class="plannable-title" title={item.plannable.title}>{item.plannable.title}</span>
             {@render content()}
         </a>
         <button

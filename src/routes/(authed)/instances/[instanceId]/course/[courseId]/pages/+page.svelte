@@ -6,6 +6,7 @@
     import { getInstanceContext } from "$lib/context/instance";
     import type { CanvasPageSummary } from "$lib/server/canvas/pages";
     import type { PageData } from "./$types";
+    import PageHeader from "$lib/components/PageHeader.svelte";
 
     let { data }: { data: PageData } = $props();
     const instance = getInstanceContext().instance;
@@ -29,11 +30,8 @@
     }
 </script>
 
-<div class="pages-page">
-    <header class="page-header -hflex">
-        <h1>Pages</h1>
-        {#if pages.value}<span class="count">({pages.value.pages.length})</span>{/if}
-    </header>
+<div class="pages-page -vflex">
+    <PageHeader title="Pages" count={pages.value?.pages.length} />
 
     {#if pages.value}
         {#if pages.value.pages.length}
@@ -67,16 +65,7 @@
 .pages-page {
     max-width: 100ch;
     margin: 0 auto;
-}
-.page-header {
-    align-items: baseline;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-
-    .count {
-        color: var(--text-muted);
-        font-size: var(--font-md);
-    }
+    gap: 1rem;
 }
 .pages-card {
     overflow-x: auto;

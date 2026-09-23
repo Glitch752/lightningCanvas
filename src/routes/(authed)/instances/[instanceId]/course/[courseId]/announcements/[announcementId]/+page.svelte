@@ -1,5 +1,6 @@
 <script lang="ts">
     import { page as currentPage } from "$app/state";
+    import PageHeader from "$lib/components/PageHeader.svelte";
     import UserContentViewer from "$lib/components/UserContentViewer.svelte";
     import { getInstanceContext } from "$lib/context/instance";
     import { dynamicDataState } from "$lib/dynamicData.svelte";
@@ -25,17 +26,19 @@
     }
 </script>
 
-<div class="announcement-page">
+<div class="announcement-page -vflex">
+    <PageHeader category="Announcements" title={announcement.value?.title ?? `Announcement ${announcementId}`} />
+    
     {#if announcement.value}
-        <header class="announcement-meta -vflex">
+        <div class="announcement-meta -vflex">
             {#if announcement.value.author?.display_name}
                 <span>{announcement.value.author.display_name}</span>
             {/if}
             {#if announcement.value.posted_at}
                 <time datetime={announcement.value.posted_at}>{formatDate(announcement.value.posted_at)}</time>
             {/if}
-        </header>
-        <UserContentViewer title={announcement.value.title} body={announcement.value.message} />
+        </div>
+        <UserContentViewer body={announcement.value.message} />
     {:else if announcement.error}
         <p class="-empty">Error loading announcement: {announcement.error}</p>
     {:else}
@@ -46,9 +49,11 @@
 <style lang="scss">
 .announcement-page {
     padding-bottom: 10rem;
+    /* just feels nicer */
+    padding-right: 2rem;
+    gap: 1rem;
 }
 .announcement-meta {
-    margin: 0 auto;
     padding: 1rem 1rem 0;
     gap: 0.25rem;
     color: var(--text-muted);

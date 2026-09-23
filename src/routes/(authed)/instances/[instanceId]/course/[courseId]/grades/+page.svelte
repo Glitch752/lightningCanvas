@@ -6,6 +6,7 @@
     import type { PageData } from "./$types";
     import { pageData } from "$lib/pageData.svelte";
     import { getInstanceContext } from "$lib/context/instance";
+    import PageHeader from "$lib/components/PageHeader.svelte";
 
     const { data }: { data: PageData } = $props();
     const instance = getInstanceContext().instance;
@@ -45,10 +46,8 @@
     }
 </script>
 
-<div class="grades-page">
-    <header class="page-header">
-        <h1>Grades</h1>
-    </header>
+<div class="grades-page -vflex">
+    <PageHeader title="Grades" />
 
     {#if grades.value}
         <div class="grades-layout">
@@ -112,11 +111,9 @@
 .grades-page {
     max-width: 120ch;
     margin: 0 auto;
+    gap: 1rem;
 }
 
-.page-header {
-    margin-bottom: 1rem;
-}
 .grades-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 16rem;

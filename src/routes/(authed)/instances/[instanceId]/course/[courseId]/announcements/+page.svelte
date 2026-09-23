@@ -6,6 +6,7 @@
     import { getGlobalCourse } from "../+layout.svelte";
     import type { CanvasAnnouncement } from "$lib/server/canvas/announcements";
     import type { PageData } from "./$types";
+    import PageHeader from "$lib/components/PageHeader.svelte";
 
     let { data }: { data: PageData } = $props();
     const instance = getInstanceContext().instance;
@@ -31,11 +32,8 @@
     }
 </script>
 
-<div class="announcements-page">
-    <header class="page-header -hflex">
-        <h1>Announcements</h1>
-        {#if announcements.value}<span class="count">({announcements.value.announcements.length})</span>{/if}
-    </header>
+<div class="announcements-page -vflex">
+    <PageHeader title="Announcements" count={announcements.value?.announcements.length} />
 
     {#if announcements.value}
         {#if announcements.value.announcements.length}
@@ -64,16 +62,7 @@
 .announcements-page {
     max-width: 100ch;
     margin: 0 auto;
-}
-.page-header {
-    align-items: baseline;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-
-    .count {
-        color: var(--text-muted);
-        font-size: var(--font-md);
-    }
+    gap: 1rem;
 }
 .announcement-list {
     gap: 0.5rem;

@@ -6,6 +6,7 @@
     import { getInstanceContext } from "$lib/context/instance";
     import type { PageData } from "./$types";
     import AssignmentList from "./AssignmentList.svelte";
+    import PageHeader from "$lib/components/PageHeader.svelte";
 
     let { data }: { data: PageData } = $props();
     const instance = getInstanceContext().instance;
@@ -19,11 +20,8 @@
     }));
 </script>
 
-<div class="assignments-page">
-    <header class="page-header -hflex">
-        <h1>Assignments</h1>
-        {#if assignments.value}<span class="count">({assignments.value.assignments.length})</span>{/if}
-    </header>
+<div class="assignments-page -vflex">
+    <PageHeader title="Assignments" count={assignments.value?.assignments.length} />
 
     {#if assignments.value}
         {#if assignments.value.assignments.length}
@@ -42,15 +40,6 @@
 .assignments-page {
     max-width: 100ch;
     margin: 0 auto;
-}
-.page-header {
-    align-items: baseline;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-
-    .count {
-        color: var(--text-muted);
-        font-size: var(--font-md);
-    }
+    gap: 1rem;
 }
 </style>

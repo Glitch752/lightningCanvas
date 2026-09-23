@@ -4,6 +4,8 @@
 	import UserContentViewer from "$lib/components/UserContentViewer.svelte";
 	import type { PageData } from "./$types";
     import { pageData } from "$lib/pageData.svelte";
+    import PageHeader from "$lib/components/PageHeader.svelte";
+    import { formatRelative } from "$lib/datetime";
 
 	let { data }: { data: PageData } = $props();
 	const assignment = dynamicDataState(() => data.assignment);
@@ -53,12 +55,22 @@
 {#if canvasAssignment}
 	<div class="assignment-page">
 		<header class="assignment-header -vflex">
-            <h1>{canvasAssignment.name}</h1>
-            <div class="metadata">
-				{#if canvasAssignment.due_at}<span><strong>Due</strong> {formatDate(canvasAssignment.due_at)}</span>{/if}
-				{#if canvasAssignment.points_possible !== null}<span><strong>Points</strong> {canvasAssignment.points_possible}</span>{/if}
-				{#if canvasAssignment.submission_types.length}<span><strong>Submitting</strong> {canvasAssignment.submission_types.map(submissionTypeLabel).join(", ")}</span>{/if}
-				{#if canvasAssignment.lock_at}<span><strong>Available</strong> until {formatDate(canvasAssignment.lock_at)}</span>{/if}
+			<!-- technically this nests <header> elements but eehhhhh -->
+			<PageHeader category="Assignments" title={canvasAssignment.name ?? "Assignment"} />
+            
+			<div class="metadata">
+				{#if canvasAssignment.due_at}<span title={formatRelative(new Date(canvasAssignment.due_at))}>
+					<strong>Due</strong> {formatDate(canvasAssignment.due_at)}
+				</span>{/if}
+				{#if canvasAssignment.points_possible !== null}<span>
+					<strong>Points</strong> {canvasAssignment.points_possible}
+				</span>{/if}
+				{#if canvasAssignment.submission_types.length}<span>
+					<strong>Submitting</strong> {canvasAssignment.submission_types.map(submissionTypeLabel).join(", ")}
+				</span>{/if}
+				{#if canvasAssignment.lock_at}<span title={formatRelative(new Date(canvasAssignment.lock_at))}>
+					<strong>Available</strong> until {formatDate(canvasAssignment.lock_at)}
+				</span>{/if}
             </div>
             
             {#if canvasAssignment.locked_for_user}
@@ -147,7 +159,7 @@
 		"header sidebar"
 		"content sidebar";
     
-	gap: 1.5rem;
+	gap: 0 1.5rem;
 	max-width: 140ch;
 	margin: 0 auto;
 

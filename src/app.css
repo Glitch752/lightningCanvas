@@ -176,6 +176,27 @@ a {
 
 /* pretty arbitrary convention, but i like it. utility styles starting with - */
 
+.-render-error {
+	gap: 0.5rem;
+	padding: 1rem;
+
+	border: 1px solid var(--danger);
+	border-radius: var(--radius);
+
+	h1, h2 { color: var(--danger); }
+	p {
+		color: var(--text-muted);
+		white-space: pre-wrap;
+	}
+	pre {
+		color: var(--text-muted);
+		overflow-x:	auto;
+		margin: 0;
+		font-size: var(--font-sm);
+	}
+	button { align-self: start; }
+}
+
 .-card {
 	background: var(--bg-elevated);
 	border: 1px solid var(--border);

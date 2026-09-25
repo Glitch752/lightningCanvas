@@ -9,6 +9,7 @@
     import TodoList from "../../../../TodoList.svelte";
     import ModuleList from "./modules/ModuleList.svelte";
     import PageHeader from "$lib/components/PageHeader.svelte";
+    import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
 
     let { data }: { data: PageData } = $props();
     const instance = getInstanceContext().instance;
@@ -46,15 +47,17 @@
     </div>
 
     <aside class="course-todo -vflex">
-        <TodoList
-            plannerItems={{
-                value: courseHome.value?.plannerItems,
-                loading: courseHome.loading,
-                error: courseHome.error
-            }}
-            courseItems={course ? [{ ...course, color: "var(--primary)" }] : undefined}
-            instances={[instance]}
-        />
+        <ErrorBoundary>
+            <TodoList
+                plannerItems={{
+                    value: courseHome.value?.plannerItems,
+                    loading: courseHome.loading,
+                    error: courseHome.error
+                }}
+                courseItems={course ? [{ ...course, color: "var(--primary)" }] : undefined}
+                instances={[instance]}
+            />
+        </ErrorBoundary>
     </aside>
 </div>
 

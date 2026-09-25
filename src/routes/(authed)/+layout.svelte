@@ -11,6 +11,7 @@
     import BackgroundEffects from "$lib/components/BackgroundEffects.svelte";
     import { browser } from "$app/env";
     import { pageDataStore } from "$lib/pageData.svelte";
+    import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
   	
 	let { children, data }: { children: Snippet, data: LayoutData } = $props();
 </script>
@@ -21,7 +22,7 @@
 		<a href="/calendar" class="-input -flat -vflex" class:-selected={page.route.id === "/(authed)/calendar"}><Calendar /> Cal</a>
 	</nav>
 	<main>
-		{@render children()}
+		<ErrorBoundary type="page">{@render children()}</ErrorBoundary>
 		{#if data.settings.visual.showBackgroundEffects && browser}
 			<BackgroundEffects />
 		{/if}

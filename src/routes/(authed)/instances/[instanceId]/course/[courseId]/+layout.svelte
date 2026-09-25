@@ -10,6 +10,7 @@
     import { createContext, type Snippet } from "svelte";
     import { getInstanceContext } from "$lib/context/instance";
     import CourseTabs from "./CourseTabs.svelte";
+    import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
 
     let { children, data }: { children: Snippet; data: LayoutData } = $props();
     const instance = getInstanceContext().instance;
@@ -25,7 +26,7 @@
     {/if}
 
     <div class="course-content">
-        {@render children()}
+        <ErrorBoundary type="course page">{@render children()}</ErrorBoundary>
     </div>
 </div>
 

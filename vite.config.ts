@@ -11,7 +11,13 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true,
 				experimental: {
 					async: true
-				}
+				},
+			},
+			experimental: {
+				handleRenderingErrors: true
+			},
+			version: {
+				name: "0.0.1",
 			},
 
 			// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.

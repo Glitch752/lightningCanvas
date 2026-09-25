@@ -1,6 +1,7 @@
 import { redirect, type Handle, type ServerInit } from "@sveltejs/kit";
 import { cookieName, createSessionCookie, isAuthenticated } from "$lib/server/auth";
 import { applyNewMigrations } from "$lib/server/migrations";
+import type { HandleServerError } from "@sveltejs/kit";
 
 // migrations
 export const init: ServerInit = async () => {
@@ -23,4 +24,11 @@ export const handle: Handle = ({ event, resolve }) => {
 	loginUrl.searchParams.set('redirectTo', redirectTo);
 
 	throw redirect(303, loginUrl);
+};
+
+export const handleError: HandleServerError = ({ error, message }) => {
+    return {
+        message: error instanceof Error ? error.message : message,
+		stack: error instanceof Error ? error.stack : undefined
+    };
 };

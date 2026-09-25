@@ -7,6 +7,8 @@
         switch(item.plannableType) {
             case "assignment":
                 return `/instances/${item.instanceId}/course/${item.courseId}/assignments/${item.plannableId}`;
+            case "announcement":
+                return `/instances/${item.instanceId}/course/${item.courseId}/announcements/${item.plannableId}`;
             case "quiz":
                 return `${canvasHostname}/courses/${item.courseId}/quizzes/${item.plannableId}`;
             default:
@@ -16,7 +18,8 @@
     export function isPlannerLinkExternal(item: CanvasPlannerItem): boolean {
         return item.plannableType === "quiz";
     }
-    export function plannerItemCompleted(item: CanvasPlannerItem): boolean {
+    export function isPlannerItemCompleted(item: CanvasPlannerItem): boolean {
+        if(item.plannableType !== "assignment") return false;
         return item.submissions?.submitted || (item.plannerOverride?.markedComplete ?? false);
     }
 </script>
@@ -29,40 +32,41 @@
     import Circle from "@lucide/svelte/icons/circle";
     import { formatRelative } from "$lib/datetime";
     import type { CanvasCourse, CanvasPlannerItem } from "$lib/server/canvas/courses";
-    import type { Snippet } from "svelte";
+    import type { Component, Snippet } from "svelte";
     import type { CanvasInstance } from "$lib/settings";
     import { SvelteSet } from "svelte/reactivity";
+    import CourseItemIcon from "$lib/components/CourseItemIcon.svelte";
 
     const { plannerItems, courseItems, instances }: {
-        plannerItems: DynamicDataState<CanvasPlannerItem[] | null | undefined>,
+        plannerItems: DynamicDataState<CanvasPlannerItem[] | null>,
         courseItems: (CanvasCourse & { color: string })[] | null | undefined,
         instances: CanvasInstance[]
     } = $props();
 
+    const recentFeedbackItems = $derived(plannerItems.value
+        ?.filter(item => item.submissions?.feedback?.comment)
+        .sort((a, b) => {
+            const aDate = new Date(a.submissions?.feedback?.comment ? (a.plannable.dueAt ?? a.plannableDate) : 0);
+            const bDate = new Date(b.submissions?.feedback?.comment ? (b.plannable.dueAt ?? b.plannableDate) : 0);
+            return bDate.getTime() - aDate.getTime();
+        }));
+
+    let showCompletedItems = $state(false);
+
     const todoGroupedByDate = $derived.by(() => {
         // TODO: manually dismissing items
         const items = showCompletedItems ? plannerItems.value :
-            plannerItems.value?.filter(i => !plannerItemCompleted(i));
+            plannerItems.value?.filter(i => !isPlannerItemCompleted(i));
         if(!items) return null;
 
         const grouped: Record<string, typeof items> = {};
         for(const item of items) {
-            const date = new Date(item.plannable.dueAt).toDateString();
+            const date = new Date(item.plannable.dueAt ?? item.plannableDate).toDateString();
             if(!grouped[date]) grouped[date] = [];
             grouped[date].push(item);
         }
         return grouped;
     });
-
-    const recentFeedbackItems = $derived(plannerItems.value
-        ?.filter(item => item.submissions?.feedback?.comment)
-        .sort((a, b) => {
-            const aDate = new Date(a.submissions?.feedback?.comment ? a.plannable.dueAt : 0);
-            const bDate = new Date(b.submissions?.feedback?.comment ? b.plannable.dueAt : 0);
-            return bDate.getTime() - aDate.getTime();
-        }));
-
-    let showCompletedItems = $state(false);
 
     /** planner items that are currently being updated */
     const pendingPlannerItems = $state(new SvelteSet<string>());
@@ -75,7 +79,7 @@
         if(pendingPlannerItems.has(key)) return;
         pendingPlannerItems.add(key);
 
-        const oldCompleted = plannerItemCompleted(item);
+        const oldCompleted = isPlannerItemCompleted(item);
         const oldPlannerOverride = item.plannerOverride;
 
         const markedComplete = !oldCompleted;
@@ -141,17 +145,23 @@
             rel={isPlannerLinkExternal(item) ? "noreferrer" : undefined}
         >
             <span class="course-name">{course?.displayedName}</span>
-            <span class="plannable-title" title={item.plannable.title}>{item.plannable.title}</span>
+            <span class="plannable-title" title={item.plannable.title}>
+                <!-- this is very much a personal preference thing, but i don't want the icons to show for normal assignments -->
+                {#if item.plannableType !== "assignment"}
+                    <CourseItemIcon type={item.plannableType} title={item.plannable.title} /><!--
+                i long for the day when white-space-trim is well-supported
+                -->{/if}{item.plannable.title}
+            </span>
             {@render content()}
         </a>
         <button
             class="toggle-complete"
-            title={plannerItemCompleted(item) ? "Mark incomplete" : "Mark complete"}
-            aria-label={plannerItemCompleted(item) ? "Mark incomplete" : "Mark complete"}
+            title={isPlannerItemCompleted(item) ? "Mark incomplete" : "Mark complete"}
+            aria-label={isPlannerItemCompleted(item) ? "Mark incomplete" : "Mark complete"}
             disabled={pendingPlannerItems.has(plannerItemKey(item))}
             onclick={(event) => { event.preventDefault(); event.stopPropagation(); togglePlannerItem(item); }}
         >
-            {#if plannerItemCompleted(item)}<CircleCheck />{:else}<Circle />{/if}
+            {#if isPlannerItemCompleted(item)}<CircleCheck />{:else}<Circle />{/if}
         </button>
     </li>
 {/snippet}
@@ -164,7 +174,7 @@
     {#each Object.entries(todoGroupedByDate).toSorted((a, b) =>
         new Date(a[0]).getTime() - new Date(b[0]).getTime()
     ) as [date, items]}
-        {@const hasIncompleteItems = items.some(item => !plannerItemCompleted(item))}
+        {@const hasIncompleteItems = items.some(item => !isPlannerItemCompleted(item))}
         <h2
             class="time-header -hflex"
             class:completed={!hasIncompleteItems}
@@ -178,11 +188,11 @@
         </h2>
         <ul class="planner-items -vflex">
             {#each items as item}
-                {@const dueDate = new Date(item.plannable.dueAt)}
                 <!-- TODO: special styles for overridden completion -->
-                {@const completed = plannerItemCompleted(item)}
+                {@const completed = isPlannerItemCompleted(item)}
                 {#snippet content()}
-                    {#if !completed}
+                    {#if !completed && item.plannable.dueAt}
+                        {@const dueDate = new Date(item.plannable.dueAt)}
                         <span class="due-date">
                             Due {timeFormatter.format(dueDate)}
                             <span class:-error={dueDate < new Date()}>({formatRelative(dueDate)})</span>
@@ -302,13 +312,22 @@ li {
         font-size: var(--font-xs);
     }
     .plannable-title {
-        /* best-effort limit to 2 lines with webkit weirdness */
+        /* best-effort limit to 2 lines with webkit weirdness. this works in firefox too */
         display: -webkit-box;
         -webkit-line-clamp: 2;
         line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         text-overflow: ellipsis;
+
+        > :global(span) {
+            padding-right: 0.35em;
+        }
+        :global(svg) {
+            width: 0.9rem;
+            height: 0.9rem;
+            color: var(--highlight);
+        }
     }
     .due-date {
         color: var(--text-muted);

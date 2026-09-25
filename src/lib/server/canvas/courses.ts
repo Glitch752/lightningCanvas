@@ -80,10 +80,10 @@ export type CanvasPlannerItem = {
 	};
 	submissions?: { submitted: boolean; feedback?: { comment?: string; }; };
 	
-	plannableType: "assignment" | "quiz" | string;
+	plannableType: "assignment" | "quiz" | "announcement";
 	plannableId: string;
 	plannableDate: string;
-	plannable: { id: string; title: string; pointsPossible: number; dueAt: string; };
+	plannable: { id: string; title: string; pointsPossible?: number; dueAt?: string; };
 	contextType: "Course" | string;
 	
 	instanceId: string;

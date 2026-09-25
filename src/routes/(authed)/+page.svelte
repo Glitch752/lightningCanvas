@@ -1,9 +1,10 @@
 <script lang="ts">
     import type { PageData } from "./$types";
     import { dynamicDataState } from "$lib/dynamicData.svelte";
-    import TodoList, { plannerItemCompleted } from "./TodoList.svelte";
+    import TodoList, { isPlannerItemCompleted } from "./TodoList.svelte";
     import CourseCard from "./CourseCard.svelte";
     import { pageData } from "$lib/pageData.svelte";
+    import ErrorBoundary from "$lib/components/ErrorBoundary.svelte";
 
 	let { data }: { data: PageData } = $props();
 
@@ -22,7 +23,7 @@
 
     const plannerItemsByCourse = $derived(
         plannerItems.value
-        ?.filter(item => item.contextType === "Course" && item.courseId && !plannerItemCompleted(item))
+        ?.filter(item => item.contextType === "Course" && item.courseId && !isPlannerItemCompleted(item))
         ?.reduce((acc, item) => {
             if(!acc[item.courseId]) acc[item.courseId] = [];
             acc[item.courseId].push(item);
@@ -54,7 +55,9 @@
     </div>
     
     <div class="todo -vflex">
-        <TodoList {plannerItems} {courseItems} instances={data.settings.canvasInstances} />
+        <ErrorBoundary>
+            <TodoList {plannerItems} {courseItems} instances={data.settings.canvasInstances} />
+        </ErrorBoundary>
     </div>
 </div>
 

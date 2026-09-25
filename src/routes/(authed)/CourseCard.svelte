@@ -5,6 +5,7 @@
     import type { PageData } from "./$types";
     import type { CanvasCourse, CanvasPlannerItem } from "$lib/server/canvas/courses";
     import { getPlannerLink, isPlannerLinkExternal } from "./TodoList.svelte";
+    import CourseItemIcon from "$lib/components/CourseItemIcon.svelte";
 
     const MAX_COURSE_TASKS_DISPLAYED = 5;
 
@@ -56,7 +57,6 @@
         
         {@const maxDisplayed = expanded ? plannerItemsForCourse.length : MAX_COURSE_TASKS_DISPLAYED}
         {#each plannerItemsForCourse.slice(0, maxDisplayed) as item}
-            {@const dueAtDate = new Date(item.plannable.dueAt)}
             <a
                 class="course-task -input -hflex"
                 href={getPlannerLink(data.settings.canvasInstances, item)}
@@ -64,10 +64,19 @@
                 rel={isPlannerLinkExternal(item) ? "noreferrer" : undefined}
                 title={item.plannable.title}
             >
+                <!-- again, personal preference thing -->
+                {#if item.plannableType !== "assignment"}
+                    <span class="icon">
+                        <CourseItemIcon type={item.plannableType} title={item.plannable.title} />
+                    </span>
+                {/if}
                 <span class="title">{item.plannable.title}</span>
-                <span class="due" class:-error={dueAtDate < new Date()}>
-                    {dueAtDate.toLocaleString([], { month: "short", day: "numeric" })}
-                </span>
+                {#if item.plannable.dueAt}
+                    {@const dueAtDate = new Date(item.plannable.dueAt)}
+                    <span class="due" class:-error={dueAtDate < new Date()}>
+                        {dueAtDate.toLocaleString([], { month: "short", day: "numeric" })}
+                    </span>
+                {/if}
             </a>
         {/each}
         {#if plannerItemsForCourse.length > maxDisplayed}
@@ -184,14 +193,25 @@
     margin: 0.25rem 0.75rem;
     font-size: var(--font-sm);
     text-decoration: none;
-    gap: 0.75rem;
+    gap: 0.5rem;
     justify-content: space-between;
     border-left-color: var(--highlight);
     white-space: nowrap;
 
+    .icon {
+        > :global(span) {
+            padding-top: 0;
+        }
+        :global(svg) {
+            width: 0.8rem;
+            height: 0.8rem;
+            color: var(--text-muted);
+        }
+    }
     .title {
         overflow: hidden;
         text-overflow: ellipsis;
+        flex: 1;
     }
     .due {
         color: var(--text-muted);

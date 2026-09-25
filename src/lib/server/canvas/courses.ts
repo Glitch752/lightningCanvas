@@ -58,8 +58,8 @@ export type CanvasAPIPlannerItemResponse = {
     context_name: string;
     course_id: number;
     submissions: { submitted: boolean; feedback?: { comment?: string; }; };
-    plannable_id: string;
-    plannable_type: "assignment" | "quiz" | string;
+    plannable_id: number;
+    plannable_type: "assignment" | "quiz" | "announcement" | string;
     plannable_date: string;
     plannable: { id: string; title: string; points_possible: number; due_at: string; };
 	planner_override: {
@@ -80,8 +80,8 @@ export type CanvasPlannerItem = {
 	};
 	submissions?: { submitted: boolean; feedback?: { comment?: string; }; };
 	
-	plannableType: "assignment" | "quiz" | "announcement";
-	plannableId: string;
+	plannableType: "assignment" | "quiz" | "announcement" | string;
+	plannableId: number;
 	plannableDate: string;
 	plannable: { id: string; title: string; pointsPossible?: number; dueAt?: string; };
 	contextType: "Course" | string;
@@ -137,6 +137,7 @@ export const courseData = new DynamicData<CanvasCourse[] | null>({
 });
 
 export function transformAPIPlannerItem(item: CanvasAPIPlannerItemResponse, instanceId: string): CanvasPlannerItem {
+	console.log(item.plannable_id, typeof item.plannable_id);
 	return {
 		plannerOverride: item.planner_override ? {
 			id: item.planner_override.id,
@@ -171,7 +172,7 @@ export const plannerItems = new DynamicData<CanvasPlannerItem[] | null>({
 	key: "planner-items",
 	ttlMs: 1000 * 60 * 60 * 24 * 30,
 	requireInitialFetch: false,
-	refreshIntervalMs: 1000 * 60 * 60 * 1, // refresh every hour
+	refreshIntervalMs: 1000 * 60 * 60 * 1, // rare item that we intentionally refresh often
 	refreshThresholdMs: 1000 * 60 * 1, // likely to change often
 	fetch: async () => {
 		const uid = await userId.get();

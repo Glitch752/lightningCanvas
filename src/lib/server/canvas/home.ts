@@ -33,7 +33,7 @@ export const courseHomeDataRegistry = new DynamicDataRegistry<[instanceId: strin
 		key: `instances/${instanceId}/courses/${courseId}/home`,
 		ttlMs: 1000 * 60 * 60 * 24 * 30,
 		requireInitialFetch: false,
-		refreshThresholdMs: 1000 * 60 * 5,
+		refreshThresholdMs: 1000 * 60 * 5, // likely to change often
 		fetch: async () => {
 			const uid = await userId.get();
 			if(uid === null) return { home: null, plannerItems: null };

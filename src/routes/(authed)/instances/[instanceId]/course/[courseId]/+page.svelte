@@ -52,7 +52,11 @@
                 plannerItems={{
                     value: courseHome.value?.plannerItems,
                     loading: courseHome.loading,
-                    error: courseHome.error
+                    error: courseHome.error,
+                    update: (v) => courseHome.update((c) => c ? {
+                        ...c,
+                        plannerItems: v(c.plannerItems) ?? null
+                    } : c)
                 }}
                 courseItems={course ? [{ ...course, color: "var(--primary)" }] : undefined}
                 instances={[instance]}

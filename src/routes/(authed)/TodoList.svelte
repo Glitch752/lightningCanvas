@@ -19,8 +19,9 @@
         return item.plannableType === "quiz";
     }
     export function isPlannerItemCompleted(item: CanvasPlannerItem): boolean {
+        if(item.plannerOverride?.markedComplete) return true;
         if(item.plannableType !== "assignment") return false;
-        return item.submissions?.submitted || (item.plannerOverride?.markedComplete ?? false);
+        return item.submissions?.submitted ?? false;
     }
 </script>
 
@@ -32,7 +33,7 @@
     import Circle from "@lucide/svelte/icons/circle";
     import { formatRelative } from "$lib/datetime";
     import type { CanvasCourse, CanvasPlannerItem } from "$lib/server/canvas/courses";
-    import type { Component, Snippet } from "svelte";
+    import type { Snippet } from "svelte";
     import type { CanvasInstance } from "$lib/settings";
     import { SvelteSet } from "svelte/reactivity";
     import CourseItemIcon from "$lib/components/CourseItemIcon.svelte";
@@ -83,7 +84,7 @@
         const oldPlannerOverride = item.plannerOverride;
 
         const markedComplete = !oldCompleted;
-        plannerItems.update?.(items => items?.map(current => current === item ? {
+        plannerItems.update(items => items?.map(current => current === item ? {
             ...current,
             plannerOverride: { id: item.plannerOverride?.id, markedComplete }
         } : current));
@@ -94,6 +95,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     instanceId: item.instanceId,
+                    courseId: item.courseId,
                     plannableType: item.plannableType,
                     plannableId: item.plannableId,
                     plannerOverrideId: item.plannerOverride?.id,
@@ -102,19 +104,19 @@
             });
             if(!response.ok) throw new Error(await response.text());
 
-            const result = await response.json() as { plannerOverrideId?: number };
+            const result = await response.json() as { plannerOverrideId: number; markedComplete: boolean };
             // save the new planner override id if it was created
-            plannerItems.update?.(items => items?.map(current =>
-                plannerItemKey(current) === key ? {
+            plannerItems.update(items => {
+                return items?.map(current => plannerItemKey(current) === key ? {
                     ...current,
                     plannerOverride: {
                         id: result.plannerOverrideId,
-                        markedComplete
+                        markedComplete: result.markedComplete
                     }
-                } : current
-            ));
+                } : current);
+            });
         } catch(error) {
-            plannerItems.update?.(items => items?.map(current => current === item ? {
+            plannerItems.update(items => items?.map(current => current === item ? {
                 ...current,
                 plannerOverride: oldPlannerOverride
             } : current));
